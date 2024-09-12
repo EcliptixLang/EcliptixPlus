@@ -206,7 +206,7 @@ namespace Ecliptix::AST {
 			case NodeType::UnaryExpression:
 				return "NodeType::UnaryExpression";
 			default:
-				return "unknown";
+				throw "Unknown type found";
 		}
 	}
 }
@@ -276,7 +276,6 @@ namespace Ecliptix::Parser {
 }
 
 int main(int argc, char* argv[]) {
-    // Check if an argument is provided (file path, not used in this example)
     /* if (argc < 2) {
         std::cout << "Not enough arguments\n";
         return 1;
