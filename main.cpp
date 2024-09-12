@@ -283,19 +283,15 @@ int main(int argc, char* argv[]) {
     }
     std::string contents = Ecliptix::Utilities::readFile(argv[1]); */
     
-    // Initialize the parser
     Ecliptix::Parser::Parser parser;
 
     std::string code;
 
-    // Read entire input (considering you might be testing with multiple lines)
     std::cout << "> ";
 	std::cin >> code;
 
-    // Produce AST from the collected code
     Ecliptix::AST::Program program = parser.produceAST(code);
 
-    // Print out the AST
     std::cout << "{" << std::endl;
     std::cout << "\tkind: " << Ecliptix::AST::StringifyNodeTypes(program.kind) << "," << std::endl;
     std::cout << "\tbody: [" << std::endl;
@@ -316,7 +312,7 @@ int main(int argc, char* argv[]) {
                 break;
             }
             default:
-                std::cout << "\t\t\t// No additional details for this node type" << std::endl;
+                std::cout << "\t\t\t// No additional information for this node type" << std::endl;
                 break;
         }
         std::cout << "\t\t}," << std::endl;
