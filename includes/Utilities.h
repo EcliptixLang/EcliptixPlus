@@ -1,0 +1,22 @@
+#pragma once
+#include <vector>
+#include <string>
+#include <stdexcept>
+
+#define CharArr std::vector<char>
+
+namespace Ecliptix::Utilities {
+    std::string readFile(std::string name);
+    CharArr split(std::string src);
+
+    template<typename T>
+    T shift(std::vector<T>& vec) {
+        if (vec.empty()) {
+            throw std::out_of_range("Cannot shift from an empty vector.");
+        }
+
+        T value = vec.front();
+        vec.erase(vec.begin());
+        return value;
+    }
+}
