@@ -32,15 +32,15 @@ namespace Ecliptix::Parser {
         return Ecliptix::Utilities::shift(this->Tokens);
     }
 
-    Ecliptix::AST::Statement Parser::ParseStatement() {
+    std::unique_ptr<Ecliptix::AST::Statement> Parser::ParseStatement() {
         return this->ParseExpression();
     }
 
-    Ecliptix::AST::Expression Parser::ParseExpression() {
+    std::unique_ptr<Ecliptix::AST::Expression> Parser::ParseExpression() {
         return this->ParsePrimaryExpression();
     }
 
-    Ecliptix::AST::Expression Parser::ParsePrimaryExpression() {
+    std::unique_ptr<Ecliptix::AST::Expression> Parser::ParsePrimaryExpression() {
         Ecliptix::Lexer::Token token = this->currentToken();
 
         switch (token.type) {

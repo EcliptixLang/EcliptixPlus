@@ -1,8 +1,9 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 
-#define StmtArr std::vector<Ecliptix::AST::Statement>
+#define StmtArr std::vector<std::unique_ptr<Statement>>
 
 namespace Ecliptix::AST {
     enum class NodeType {
@@ -18,6 +19,8 @@ namespace Ecliptix::AST {
 
     struct Statement {
         NodeType kind;
+
+		virtual ~Statement() = default;
     };
 
     struct Program : public Statement {
@@ -27,12 +30,20 @@ namespace Ecliptix::AST {
     struct Expression : public Statement {};
     
     struct IdentifierLiteral : public Expression {
-        std::string symbol;
-    };
+		std::string symbol;
 
-    struct NumericLiteral : public Expression {
-        int value;
-    };
+		IdentifierLiteral(NodeType kind, std::string symbol) : symbol(symbol) {
+			this->kind = kind;
+		}
+	};
+
+	struct NumericLiteral : public Expression {
+	    int value;
+
+    	NumericLiteral(NodeType kind, int value) : value(value) {
+	        this->kind = kind;
+    	}
+	};
 
     std::string StringifyNodeTypes(NodeType type);
 }

@@ -18,8 +18,8 @@ namespace Ecliptix::Parser {
         Ecliptix::Lexer::Token previousToken();
         Ecliptix::Lexer::Token nextToken();
 
-        Ecliptix::AST::Statement ParseStatement();
-        Ecliptix::AST::Expression ParseExpression();
-        Ecliptix::AST::Expression ParsePrimaryExpression();
+        std::unique_ptr<Ecliptix::AST::Statement> ParseStatement();
+        std::unique_ptr<Ecliptix::AST::Expression> ParseExpression();
+        std::unique_ptr<Ecliptix::AST::Expression> ParsePrimaryExpression();
     };
 }
