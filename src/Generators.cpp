@@ -19,11 +19,12 @@ namespace Ecliptix::Generators {
         return std::make_unique<Ecliptix::AST::IdentifierLiteral>(Ecliptix::AST::NodeType::Identifier, symbol);
     }*/
 
-    std::unique_ptr<Ecliptix::Values::NumberValue> createNumberValue(int num){
-        return std::make_unique<Ecliptix::Values::NumberValue>(Ecliptix::Values::ValueType::Number, num);
-    }
+    std::unique_ptr<Ecliptix::Values::NumberValue> createNumberValue(int num) {
+    	return std::make_unique<Ecliptix::Values::NumberValue>(num);
+	}
+
 
     std::unique_ptr<Ecliptix::Values::NullValue> createNullValue(){
-        return std::make_unique<Ecliptix::Values::NullValue>(Ecliptix::Values::ValueType::Null, "null");
+        return std::make_unique<Ecliptix::Values::NullValue>();
     }
 }

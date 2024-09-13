@@ -23,11 +23,12 @@ namespace Ecliptix::Values {
 
 
 	struct NumberValue : public RuntimeValue {
-    	int value;
+    int value;
 
-    	NumberValue(int value) : value(value) {
-	        this->type = ValueType::Number;
-    	}
-	};
+    NumberValue(int value) : value(value) {
+        this->type = ValueType::Number;
+    }
+};
+
 
 } // namespace Ecliptix::Values

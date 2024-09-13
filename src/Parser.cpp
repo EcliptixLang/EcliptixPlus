@@ -28,7 +28,8 @@ namespace Ecliptix::Parser {
         while (NotEOF()) {
             program.body.push_back(this->ParseStatement());
         }
-
+		std::cout << "LITERALLY END OF PARSER" << std::endl;
+		
         return program;
     }
 
