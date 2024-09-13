@@ -5,15 +5,6 @@
 #define ExpressionPointer std::unique_ptr<Ecliptix::AST::Expression>
 #define Token Ecliptix::Lexer::Token
 
-#include <iostream>
-#include <memory>
-#include <string>
-
-// Assume this function exists
-namespace Ecliptix::AST {
-    std::string StringifyNodeTypes(NodeType type);
-}
-
 
 namespace Ecliptix::Parser {
 
