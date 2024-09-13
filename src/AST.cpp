@@ -12,6 +12,7 @@ namespace Ecliptix::AST {
             case NodeType::NumericLiteral: return "NodeType::NumericLiteral";
             case NodeType::StringLiteral: return "NodeType::StringLiteral";
             case NodeType::UnaryExpression: return "NodeType::UnaryExpression";
+			case NodeType::NullLiteral: return "NodeType::NullLiteral";
             default: throw std::invalid_argument("Unknown node type");
         }
     }

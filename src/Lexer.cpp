@@ -7,6 +7,7 @@ namespace Ecliptix::Lexer {
         KeywordList keywords;
         keywords["set"] = TokenType::Set;
         keywords["lock"] = TokenType::Lock;
+		keywords["null"] = TokenType::Null;
         return keywords;
     }
 
@@ -22,9 +23,12 @@ namespace Ecliptix::Lexer {
         KeywordList keywords = Keywords();
         TokenArr tokens{};
         CharArr src = Ecliptix::Utilities::split(sourceCode);
+		for(char i : src){
+			std::cout << i << std::endl;
+		}
 
         while (src.size() > 0) {
-            std::cout << "Current character: " << src[0] << std::endl;
+            std::cout << "Current character: " << src[0] << "Size: " << src.size() << std::endl;
 
             if (src[0] == '(') {
                 tokens.push_back(token(std::to_string(Ecliptix::Utilities::shift(src)), TokenType::OpenParen));
@@ -33,6 +37,8 @@ namespace Ecliptix::Lexer {
                 tokens.push_back(token("=", TokenType::Equals));
             } else if (src[0] == ')') {
                 tokens.push_back(token(std::to_string(Ecliptix::Utilities::shift(src)), TokenType::CloseParen));
+            } else if (src[0] == '}') {
+                tokens.push_back(token(std::to_string(Ecliptix::Utilities::shift(src)), TokenType::CloseBrace));
             } else if (src[0] == '*' || src[0] == '+' || src[0] == '-' || src[0] == '/' && src[1] != '/') {
                 std::string idk = "";
                 idk += Ecliptix::Utilities::shift(src);
@@ -41,8 +47,10 @@ namespace Ecliptix::Lexer {
                 if (isalpha(src[0])) {
                     std::string idk = "";
                     while (src.size() > 0 && isalnum(src[0])) {
-                        idk += Ecliptix::Utilities::shift(src);
+                        char text = Ecliptix::Utilities::shift(src);
+						idk += text;
                     }
+					std::cout << "IDENTIFIER: " << idk << std::endl;
                     if (keywords.find(idk) == keywords.end()) {
                         tokens.push_back(token(idk, TokenType::Identifier));
                     } else {
@@ -77,6 +85,7 @@ namespace Ecliptix::Lexer {
             case TokenType::Number: return "TokenType::Number";
             case TokenType::String: return "TokenType::String";
             case TokenType::Lock: return "TokenType::Lock";
+			case TokenType::Null: return "TokenType::Null";
             case TokenType::Set: return "TokenType::Set";
             default: return "unknown";
         }

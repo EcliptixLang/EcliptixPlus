@@ -9,6 +9,7 @@ namespace Ecliptix::AST {
     enum class NodeType {
         Program,
         NumericLiteral,
+		NullLiteral,
         StringLiteral,
         Identifier,
         BinaryExpression,
@@ -27,7 +28,9 @@ namespace Ecliptix::AST {
         StmtArr body;
     };
 
-    struct Expression : public Statement {};
+    struct Expression : public Statement {
+		virtual ~Expression() = default;
+	};
     
     struct IdentifierLiteral : public Expression {
 		std::string symbol;
@@ -44,6 +47,22 @@ namespace Ecliptix::AST {
 	        this->kind = kind;
     	}
 	};
+
+	struct NullLiteral : public Expression {
+
+    	NullLiteral(NodeType kind) {
+	        this->kind = kind;
+    	}
+	};
+
+	struct BinaryExpression : public Expression {
+		std::unique_ptr<Expression> left;
+		std::unique_ptr<Expression> right;
+		std::string _operator;
+
+		virtual ~BinaryExpression() = default;
+	};
+
 
     std::string StringifyNodeTypes(NodeType type);
 }

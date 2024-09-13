@@ -9,15 +9,22 @@
 
 namespace Ecliptix::Lexer {
     enum class TokenType {
+		Null,
+
         String,
         Number,
         Identifier,
+
         Equals,
         OpenParen,
         CloseParen,
+		OpenBrace,
+		CloseBrace,
         BinaryOperator,
+
         Set,
         Lock,
+
         _EOF
     };
 

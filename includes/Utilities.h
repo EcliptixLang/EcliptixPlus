@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <iostream>
 
 #define CharArr std::vector<char>
 
