@@ -10,16 +10,13 @@ namespace Ecliptix::Parser {
 
     Ecliptix::AST::Program Parser::produceAST(std::string sourceCode) {
         this->Tokens = Ecliptix::Lexer::tokenize(sourceCode);
-		for(Token token : this->Tokens){
-			std::cout << "Token: " << Ecliptix::Lexer::StringifyTokenTypes(token.type) << std::endl;
-		}
-        Ecliptix::AST::Program program;
+        Ecliptix::AST::Program program(Ecliptix::AST::NodeType::Program, std::vector<std::unique_ptr<Ecliptix::AST::Statement>>{});
+
         program.kind = Ecliptix::AST::NodeType::Program;
 
         while (NotEOF()) {
             program.body.push_back(this->ParseStatement());
         }
-		std::cout << "LITERALLY END OF PARSER" << std::endl;
 		
         return program;
     }

@@ -11,16 +11,23 @@ std::unique_ptr<Ecliptix::Values::RuntimeValue> evalProgram(Ecliptix::AST::Progr
 	}
     std::unique_ptr<Ecliptix::Values::RuntimeValue> val;
 
-    for (const std::unique_ptr<Ecliptix::AST::Statement>& stment : program->body) {
-        val = Ecliptix::Interpreter::evaluate(*stment);
-    }
+    for (auto& stment : program->body) {
+    	val = Ecliptix::Interpreter::evaluate(std::move(stment));
+	}
+
+
 
     return val;
 }
 
 std::unique_ptr<Ecliptix::Values::RuntimeValue> evalBinExprs(Ecliptix::AST::BinaryExpression* binop) {
-	Ecliptix::Values::RuntimeValue *lhs = Ecliptix::Interpreter::evaluate(*binop->left).get();
-	Ecliptix::Values::RuntimeValue *rhs = Ecliptix::Interpreter::evaluate(*binop->right).get();
+	Ecliptix::Values::RuntimeValue *lhs = Ecliptix::Interpreter::evaluate(
+    	std::unique_ptr<Ecliptix::AST::Statement>(std::move(binop->left))).get();
+
+	Ecliptix::Values::RuntimeValue *rhs = Ecliptix::Interpreter::evaluate(
+    	std::unique_ptr<Ecliptix::AST::Statement>(std::move(binop->right))).get();
+
+
 
 	if(lhs->type == Ecliptix::Values::ValueType::Number && rhs->type == Ecliptix::Values::ValueType::Number){
 		Ecliptix::Values::NumberValue lhss = dynamic_cast<Ecliptix::Values::NumberValue&>(*lhs);
@@ -36,41 +43,41 @@ std::unique_ptr<Ecliptix::Values::RuntimeValue> evalBinExprs(Ecliptix::AST::Bina
 		else if(oper == "*")
 			result = lhss.value * rhss.value;
 
-		return std::make_unique<Ecliptix::Values::NumberValue>(result);
+		std::cout << "returning numval with " << result << std::endl;
+
+		return Ecliptix::Generators::createNumberValue(result);
 	} else {
+
+		std::cout << "returning null" << std::endl;
 		return Ecliptix::Generators::createNullValue();
 	}
 }
 
 namespace Ecliptix::Interpreter {
-	std::unique_ptr<Ecliptix::Values::RuntimeValue> evaluate(Ecliptix::AST::Statement astNode){
-		std::cout << "INTERPRETER START" << std::endl;
-		switch(astNode.kind){
+	std::unique_ptr<Ecliptix::Values::RuntimeValue> evaluate(std::unique_ptr<Ecliptix::AST::Statement> astNode){
+		switch(astNode->kind){
 			case Ecliptix::AST::NodeType::NumericLiteral:{
-				const Ecliptix::AST::NumericLiteral* num = dynamic_cast<const Ecliptix::AST::NumericLiteral*>(&astNode);
+				const Ecliptix::AST::NumericLiteral* num = dynamic_cast<const Ecliptix::AST::NumericLiteral*>(astNode.get());
 				return Ecliptix::Generators::createNumberValue(num->value);
-			}
+			} break;
 			case Ecliptix::AST::NodeType::NullLiteral:{
-				const Ecliptix::AST::NullLiteral* num = dynamic_cast<const Ecliptix::AST::NullLiteral*>(&astNode);
+				const Ecliptix::AST::NullLiteral* num = dynamic_cast<const Ecliptix::AST::NullLiteral*>(astNode.get());
 				return Ecliptix::Generators::createNullValue();
-			}
+			} break;
 			case Ecliptix::AST::NodeType::BinaryExpression:{
-				std::cout << "BINEXP?" << std::endl;
-				Ecliptix::AST::BinaryExpression* num = dynamic_cast<Ecliptix::AST::BinaryExpression*>(&astNode);
+				Ecliptix::AST::BinaryExpression* num = dynamic_cast<Ecliptix::AST::BinaryExpression*>(astNode.get());
 				return evalBinExprs(num);
-			}
+			} break;
 			case Ecliptix::AST::NodeType::Program:{
-				std::cout << "PROGRAM FOUND" << std::endl;
-				Ecliptix::AST::Program* num = dynamic_cast<Ecliptix::AST::Program*>(&astNode);
-				std::cout << Ecliptix::AST::StringifyNodeTypes(num->body[0].get()->kind) << std::endl; // segfault here
-				std::cout << "ECECUEZRGOQERG" << std::endl;
-				return evalProgram(num);
-			}
+			    Ecliptix::AST::Program* num = dynamic_cast<Ecliptix::AST::Program*>(&*astNode);
+
+		    	return evalProgram(num);
+			} break;
 
 			default:{
 				std::cout << "This AST node is not yet set up" << std::endl;
 				exit(1);
-			}
+			} break;
 				
 		}
 	}

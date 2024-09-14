@@ -26,11 +26,13 @@ namespace Ecliptix::AST {
 
     struct Program : public Statement {
         StmtArr body;
+
+		Program(NodeType kind, StmtArr body) : body(std::move(body)) {
+			this->kind = kind;
+		}
     };
 
-    struct Expression : public Statement {
-		virtual ~Expression() = default;
-	};
+    struct Expression : public Statement {};
     
     struct IdentifierLiteral : public Expression {
 		std::string symbol;
@@ -59,8 +61,6 @@ namespace Ecliptix::AST {
 		std::unique_ptr<Expression> left;
 		std::unique_ptr<Expression> right;
 		std::string _operator;
-
-		virtual ~BinaryExpression() = default;
 	};
 
 

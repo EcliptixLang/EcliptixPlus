@@ -23,13 +23,8 @@ namespace Ecliptix::Lexer {
         KeywordList keywords = Keywords();
         TokenArr tokens{};
         CharArr src = Ecliptix::Utilities::split(sourceCode);
-		for(char i : src){
-			std::cout << i << std::endl;
-		}
 
         while (src.size() > 0) {
-            std::cout << "Current character: " << src[0] << "Size: " << src.size() << std::endl;
-
             if (src[0] == '(') {
                 tokens.push_back(token(std::to_string(Ecliptix::Utilities::shift(src)), TokenType::OpenParen));
             } else if (src[0] == '=') {
@@ -50,7 +45,6 @@ namespace Ecliptix::Lexer {
                         char text = Ecliptix::Utilities::shift(src);
 						idk += text;
                     }
-					std::cout << "IDENTIFIER: " << idk << std::endl;
                     if (keywords.find(idk) == keywords.end()) {
                         tokens.push_back(token(idk, TokenType::Identifier));
                     } else {

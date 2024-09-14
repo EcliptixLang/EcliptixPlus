@@ -14,11 +14,7 @@ namespace Ecliptix::Values {
 	};
 
 	struct NullValue : public RuntimeValue {
-    	std::string value;
-
-    	NullValue() : value("null") {
-	        this->type = ValueType::Null;
-    	}
+    	NullValue() { this->type = ValueType::Null; }
 	};
 
 
