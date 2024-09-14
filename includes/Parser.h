@@ -7,13 +7,11 @@
 namespace Ecliptix::Parser {
     class Parser {
     public:
-        Ecliptix::AST::Program produceAST(const std::string& sourceCode);
+        Ecliptix::AST::Program produceAST(std::string sourceCode);
 
     private:
         TokenArr Tokens{};
         Ecliptix::Lexer::Token lastToken;
-
-		Ecliptix::AST::Program produceAST(std::string sourceCode);
 
 		bool NotEOF();
 		Ecliptix::Lexer::Token currentToken();

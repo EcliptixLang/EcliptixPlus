@@ -4,8 +4,9 @@
 #include <memory>
 #include <unordered_map>
 #include <optional>
+#include <Lexer.h>
 
-#define StmtArr std::vector<std::shared_ptr<Statement>>
+#define StmtArr std::vector<std::shared_ptr<Ecliptix::AST::Statement>>
 
 namespace Ecliptix::AST {
     enum class NodeType {
@@ -30,7 +31,6 @@ namespace Ecliptix::AST {
         BinaryExpression,
         CallExpression,
         UnaryExpression,
-        FunctionDeclaration
     };
 
     struct Statement {
@@ -152,17 +152,17 @@ namespace Ecliptix::AST {
     };
 
     struct ObjectLiteral : public Expression {
-        std::vector<Property> properties;
+        std::vector<std::shared_ptr<Property>> properties;
 
-        ObjectLiteral(std::vector<Property> properties) : properties(std::move(properties)) {
+        ObjectLiteral(std::vector<std::shared_ptr<Property>> properties) : properties(std::move(properties)) {
             this->kind = NodeType::ObjectLiteral;
         }
     };
 
     struct ArrayLiteral : public Expression {
-        std::vector<ArrayElement> elements;
+        std::vector<std::shared_ptr<ArrayElement>> elements;
 
-        ArrayLiteral(std::vector<ArrayElement> elements) : elements(std::move(elements)) {
+        ArrayLiteral(std::vector<std::shared_ptr<ArrayElement>> elements) : elements(std::move(elements)) {
             this->kind = NodeType::ArrayLiteral;
         }
     };
@@ -181,11 +181,11 @@ namespace Ecliptix::AST {
 
     struct IfStatement : public Statement {
         std::shared_ptr<Expression> conditional;
-        NodeType operatorType;
+        Ecliptix::Lexer::TokenType operatorType;
         StmtArr consequent;
         std::optional<StmtArr> alternate;
 
-        IfStatement(std::shared_ptr<Expression> conditional, NodeType operatorType, StmtArr consequent, std::optional<StmtArr> alternate = std::nullopt)
+        IfStatement(std::shared_ptr<Expression> conditional, Ecliptix::Lexer::TokenType operatorType, StmtArr consequent, std::optional<StmtArr> alternate = std::nullopt)
             : conditional(std::move(conditional)), operatorType(operatorType), consequent(std::move(consequent)), alternate(std::move(alternate)) {
             this->kind = NodeType::IfStatement;
         }
@@ -193,10 +193,10 @@ namespace Ecliptix::AST {
 
     struct WhileStatement : public Statement {
         std::shared_ptr<Expression> conditional;
-        NodeType operatorType;
+        Ecliptix::Lexer::TokenType operatorType;
         StmtArr body;
 
-        WhileStatement(std::shared_ptr<Expression> conditional, NodeType operatorType, StmtArr body)
+        WhileStatement(std::shared_ptr<Expression> conditional, Ecliptix::Lexer::TokenType operatorType, StmtArr body)
             : conditional(std::move(conditional)), operatorType(operatorType), body(std::move(body)) {
             this->kind = NodeType::WhileStatement;
         }
@@ -204,10 +204,10 @@ namespace Ecliptix::AST {
 
     struct WhenDeclaration : public Statement {
         std::shared_ptr<Expression> conditional;
-        NodeType operatorType;
+        Ecliptix::Lexer::TokenType operatorType;
         StmtArr consequent;
 
-        WhenDeclaration(std::shared_ptr<Expression> conditional, NodeType operatorType, StmtArr consequent)
+        WhenDeclaration(std::shared_ptr<Expression> conditional, Ecliptix::Lexer::TokenType operatorType, StmtArr consequent)
             : conditional(std::move(conditional)), operatorType(operatorType), consequent(std::move(consequent)) {
             this->kind = NodeType::WhenDeclaration;
         }

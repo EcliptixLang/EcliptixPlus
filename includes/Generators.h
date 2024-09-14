@@ -3,9 +3,8 @@
 #include <vector>
 #include <memory>
 #include "AST.h"
+#include <Lexer.h>
 #include <Values.h>
-
-#define StmtArr std::vector<std::shared_ptr<Ecliptix::AST::Statement>>
 
 namespace Ecliptix::Generators {
     // Function prototypes for creating AST nodes
@@ -34,7 +33,7 @@ namespace Ecliptix::Generators {
     std::shared_ptr<Ecliptix::AST::IfStatement> createIfStatement(std::shared_ptr<Ecliptix::AST::Expression> conditional,
                                                                   Ecliptix::Lexer::TokenType operatorType,
                                                                   StmtArr consequent,
-                                                                  std::optional<StmtArr> alternate = std::nullopt);
+                                                                  std::optional<StmtArr> alternate);
     std::shared_ptr<Ecliptix::AST::WhileStatement> createWhileStatement(std::shared_ptr<Ecliptix::AST::Expression> conditional,
                                                                         Ecliptix::Lexer::TokenType operatorType,
                                                                         StmtArr body);

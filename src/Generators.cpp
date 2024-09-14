@@ -70,14 +70,14 @@ namespace Ecliptix::Generators {
     }
 
     std::shared_ptr<Ecliptix::AST::IfStatement> createIfStatement(std::shared_ptr<Ecliptix::AST::Expression> conditional,
-                                                                  Ecliptix::AST::NodeType operatorType,
+                                                                  Ecliptix::Lexer::TokenType operatorType,
                                                                   StmtArr consequent,
                                                                   std::optional<StmtArr> alternate) {
         return std::make_shared<Ecliptix::AST::IfStatement>(std::move(conditional), operatorType, std::move(consequent), std::move(alternate));
     }
 
     std::shared_ptr<Ecliptix::AST::WhileStatement> createWhileStatement(std::shared_ptr<Ecliptix::AST::Expression> conditional,
-                                                                        Ecliptix::AST::NodeType operatorType,
+                                                                        Ecliptix::Lexer::TokenType operatorType,
                                                                         StmtArr body) {
         return std::make_shared<Ecliptix::AST::WhileStatement>(std::move(conditional), operatorType, std::move(body));
     }
@@ -120,9 +120,9 @@ std::shared_ptr<Ecliptix::AST::VarDeclaration> createVarDeclaration(bool constan
         auto objLiteral = createObjectLiteral({property});
         auto arrayLiteral = createArrayLiteral({arrayElem});
         auto funcDecl = createFunctionDeclaration({"param1", "param2"}, "myFunction", {assignExpr}, Ecliptix::AST::NodeType::FunctionDeclaration);
-        auto ifStmt = createIfStatement(ident, Ecliptix::AST::NodeType::IfStatement, {assignExpr}, std::nullopt);
-        auto whileStmt = createWhileStatement(ident, Ecliptix::AST::NodeType::WhileStatement, {assignExpr});
-        auto whenDecl = createWhenDeclaration(ident, Ecliptix::AST::NodeType::WhenDeclaration, {assignExpr});
+        auto ifStmt = createIfStatement(ident, Ecliptix::Lexer::TokenType::BinaryEquals, {assignExpr}, std::nullopt);
+        auto whileStmt = createWhileStatement(ident, Ecliptix::Lexer::TokenType::BinaryEquals, {assignExpr});
+        auto whenDecl = createWhenDeclaration(ident, Ecliptix::Lexer::TokenType::BinaryEquals, {assignExpr});
         auto dollarNotation = createDollarSignNotation(str);
     }
 

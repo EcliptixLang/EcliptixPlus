@@ -236,11 +236,11 @@ namespace Ecliptix::Parser {
 			if(ttype != Ecliptix::Lexer::TokenType::CloseBracket){
 				if(this->currentToken().type == Ecliptix::Lexer::TokenType::Comma) throw std::runtime_error("idk");
 			}
-
-			this->expectToken(Ecliptix::Lexer::TokenType::CloseBracket);
-
-			return Ecliptix::Generators::createArrayLiteral(arr);
 		}
+
+		this->expectToken(Ecliptix::Lexer::TokenType::CloseBracket);
+
+		return Ecliptix::Generators::createArrayLiteral(arr);
 	}
 
 	ExpressionPointer Parser::parseDSNotation() {
@@ -350,18 +350,13 @@ namespace Ecliptix::Parser {
 
 	ExpressionPointer Parser::ParseAdditiveExpression(){
 		ExpressionPointer left = this->ParseMultiplicativeExpression();
-		std::shared_ptr<Ecliptix::AST::BinaryExpression> expr = std::make_shared<Ecliptix::AST::BinaryExpression>();
+		std::shared_ptr<Ecliptix::AST::BinaryExpression> expr;
 		while(this->currentToken().value == "+" || this->currentToken().value == "-"){
 			std::string _operator = this->nextToken().value;
 			ExpressionPointer right = this->ParseMultiplicativeExpression();
 
-			expr->left = std::move(left);
-			expr->right = std::move(right);
-			expr->kind = Ecliptix::AST::NodeType::BinaryExpression;
-			expr->_operator = _operator;
-
+			expr = std::make_shared<Ecliptix::AST::BinaryExpression>(left, right, _operator);
 			left = std::move(expr);
-	        expr = std::make_shared<Ecliptix::AST::BinaryExpression>();
 		}
 
 		return left;
@@ -369,18 +364,13 @@ namespace Ecliptix::Parser {
 
 	ExpressionPointer Parser::ParseMultiplicativeExpression(){
 		ExpressionPointer left = this->ParsePrimaryExpression();
-		std::shared_ptr<Ecliptix::AST::BinaryExpression> expr = std::make_shared<Ecliptix::AST::BinaryExpression>();
+		std::shared_ptr<Ecliptix::AST::BinaryExpression> expr;
 		while(this->currentToken().value == "/" || this->currentToken().value == "*"){
 			std::string _operator = this->nextToken().value;
 			ExpressionPointer right = this->ParsePrimaryExpression();
-
-			expr->left = std::move(left);
-			expr->right = std::move(right);
-			expr->kind = Ecliptix::AST::NodeType::BinaryExpression;
-			expr->_operator = _operator;
-
+			
+			expr = std::make_shared<Ecliptix::AST::BinaryExpression>(left, right, _operator);
 			left = std::move(expr);
-        	expr = std::make_shared<Ecliptix::AST::BinaryExpression>();
 		}
 
 		return left;
