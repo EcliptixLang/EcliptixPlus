@@ -73,6 +73,16 @@ namespace Ecliptix::AST {
         }
     };
 
+	struct VarDeclaration : public Statement {
+		VarDeclaration(bool constant, std::string identifier, std::shared_ptr<Expression> value) : constant(constant), identifier(identifier), value(std::move(value)) {
+			this->kind = NodeType::VarDeclaration;
+		}
+
+		bool constant;
+		std::string identifier;
+		std::shared_ptr<Expression> value;
+	};
+
     struct ArrayElement : public Expression {
         int index;
         std::shared_ptr<Expression> value;
@@ -203,7 +213,7 @@ namespace Ecliptix::AST {
         }
     };
 
-    struct DollarSignNotation : public Statement {
+    struct DollarSignNotation : public Expression {
         std::shared_ptr<StringLiteral> shellCmd;
 
         DollarSignNotation(std::shared_ptr<StringLiteral> shellCmd)
