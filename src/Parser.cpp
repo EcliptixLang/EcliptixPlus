@@ -2,7 +2,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
-#define ExpressionPointer std::unique_ptr<Ecliptix::AST::Expression>
+#define ExpressionPointer std::shared_ptr<Ecliptix::AST::Expression>
 #define Token Ecliptix::Lexer::Token
 
 
@@ -10,7 +10,7 @@ namespace Ecliptix::Parser {
 
     Ecliptix::AST::Program Parser::produceAST(std::string sourceCode) {
         this->Tokens = Ecliptix::Lexer::tokenize(sourceCode);
-        Ecliptix::AST::Program program(Ecliptix::AST::NodeType::Program, std::vector<std::unique_ptr<Ecliptix::AST::Statement>>{});
+        Ecliptix::AST::Program program(Ecliptix::AST::NodeType::Program, std::vector<std::shared_ptr<Ecliptix::AST::Statement>>{});
 
         program.kind = Ecliptix::AST::NodeType::Program;
 
@@ -48,7 +48,7 @@ namespace Ecliptix::Parser {
 		throw "Unexpected token found while parsing";
 	}
 
-    std::unique_ptr<Ecliptix::AST::Statement> Parser::ParseStatement() {
+    std::shared_ptr<Ecliptix::AST::Statement> Parser::ParseStatement() {
         return this->ParseExpression();
     }
 
@@ -58,10 +58,10 @@ namespace Ecliptix::Parser {
 
 	ExpressionPointer Parser::ParseAdditiveExpression(){
 		ExpressionPointer left = this->ParseMultiplicativeExpression();
-		std::unique_ptr<Ecliptix::AST::BinaryExpression> expr = std::make_unique<Ecliptix::AST::BinaryExpression>();
+		std::shared_ptr<Ecliptix::AST::BinaryExpression> expr = std::make_shared<Ecliptix::AST::BinaryExpression>();
 		while(this->currentToken().value == "+" || this->currentToken().value == "-"){
 			std::string _operator = this->nextToken().value;
-			ExpressionPointer right = this->ParsePrimaryExpression();
+			ExpressionPointer right = this->ParseMultiplicativeExpression();
 
 			expr->left = std::move(left);
 			expr->right = std::move(right);
@@ -69,7 +69,7 @@ namespace Ecliptix::Parser {
 			expr->_operator = _operator;
 
 			left = std::move(expr);
-	        expr = std::make_unique<Ecliptix::AST::BinaryExpression>();
+	        expr = std::make_shared<Ecliptix::AST::BinaryExpression>();
 		}
 
 		return left;
@@ -77,7 +77,7 @@ namespace Ecliptix::Parser {
 
 	ExpressionPointer Parser::ParseMultiplicativeExpression(){
 		ExpressionPointer left = this->ParsePrimaryExpression();
-		std::unique_ptr<Ecliptix::AST::BinaryExpression> expr = std::make_unique<Ecliptix::AST::BinaryExpression>();
+		std::shared_ptr<Ecliptix::AST::BinaryExpression> expr = std::make_shared<Ecliptix::AST::BinaryExpression>();
 		while(this->currentToken().value == "/" || this->currentToken().value == "*"){
 			std::string _operator = this->nextToken().value;
 			ExpressionPointer right = this->ParsePrimaryExpression();
@@ -88,7 +88,7 @@ namespace Ecliptix::Parser {
 			expr->_operator = _operator;
 
 			left = std::move(expr);
-        	expr = std::make_unique<Ecliptix::AST::BinaryExpression>();
+        	expr = std::make_shared<Ecliptix::AST::BinaryExpression>();
 		}
 
 		return left;
@@ -112,7 +112,7 @@ namespace Ecliptix::Parser {
 				this->nextToken();
 				return Ecliptix::Generators::createNull();
             default:
-                std::cout << "Unexpected token found during parsing" << std::endl;
+                std::cout << "Unexpected token found during parsing" << this->currentToken().value << std::endl;
                 exit(1);
         }
     }

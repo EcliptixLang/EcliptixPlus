@@ -3,7 +3,7 @@
 #include <vector>
 #include <memory>
 
-#define StmtArr std::vector<std::unique_ptr<Statement>>
+#define StmtArr std::vector<std::shared_ptr<Statement>>
 
 namespace Ecliptix::AST {
     enum class NodeType {
@@ -58,8 +58,8 @@ namespace Ecliptix::AST {
 	};
 
 	struct BinaryExpression : public Expression {
-		std::unique_ptr<Expression> left;
-		std::unique_ptr<Expression> right;
+		std::shared_ptr<Expression> left;
+		std::shared_ptr<Expression> right;
 		std::string _operator;
 	};
 

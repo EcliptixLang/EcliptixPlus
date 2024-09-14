@@ -18,11 +18,11 @@ namespace Ecliptix::Parser {
         Ecliptix::Lexer::Token previousToken();
         Ecliptix::Lexer::Token nextToken();
 
-        std::unique_ptr<Ecliptix::AST::Statement> ParseStatement();
-        std::unique_ptr<Ecliptix::AST::Expression> ParseExpression();
-		std::unique_ptr<Ecliptix::AST::Expression> ParseAdditiveExpression();
-        std::unique_ptr<Ecliptix::AST::Expression> ParsePrimaryExpression();
-		std::unique_ptr<Ecliptix::AST::Expression> ParseMultiplicativeExpression();
+        std::shared_ptr<Ecliptix::AST::Statement> ParseStatement();
+        std::shared_ptr<Ecliptix::AST::Expression> ParseExpression();
+		std::shared_ptr<Ecliptix::AST::Expression> ParseAdditiveExpression();
+        std::shared_ptr<Ecliptix::AST::Expression> ParsePrimaryExpression();
+		std::shared_ptr<Ecliptix::AST::Expression> ParseMultiplicativeExpression();
 		Ecliptix::Lexer::Token expectToken(Ecliptix::Lexer::TokenType);
     };
 }

@@ -3,16 +3,17 @@
 #include <Generators.h>
 #include <Utilities.h>
 #include <Interpreter.h>
+#include <ENV.h>
 
-std::unique_ptr<Ecliptix::Values::RuntimeValue> evalProgram(Ecliptix::AST::Program* program) {
+std::shared_ptr<Ecliptix::Values::RuntimeValue> evalProgram(Ecliptix::AST::Program* program, Ecliptix::Environment env) {
     if (!program) {
         std::cerr << "no program found??" << std::endl;
         exit(1);
 	}
-    std::unique_ptr<Ecliptix::Values::RuntimeValue> val;
+    std::shared_ptr<Ecliptix::Values::RuntimeValue> val;
 
     for (auto& stment : program->body) {
-    	val = Ecliptix::Interpreter::evaluate(std::move(stment));
+    	val = Ecliptix::Interpreter::evaluate(std::move(stment), env);
 	}
 
 
@@ -20,12 +21,24 @@ std::unique_ptr<Ecliptix::Values::RuntimeValue> evalProgram(Ecliptix::AST::Progr
     return val;
 }
 
-std::unique_ptr<Ecliptix::Values::RuntimeValue> evalBinExprs(Ecliptix::AST::BinaryExpression* binop) {
-	Ecliptix::Values::RuntimeValue *lhs = Ecliptix::Interpreter::evaluate(
-    	std::unique_ptr<Ecliptix::AST::Statement>(std::move(binop->left))).get();
+std::shared_ptr<Ecliptix::Values::RuntimeValue> evalIdentifier(Ecliptix::AST::IdentifierLiteral* ident, Ecliptix::Environment env) {
+    if (!ident) {
+        std::cerr << "no ident found" << std::endl;
+        exit(1);
+	}
 
-	Ecliptix::Values::RuntimeValue *rhs = Ecliptix::Interpreter::evaluate(
-    	std::unique_ptr<Ecliptix::AST::Statement>(std::move(binop->right))).get();
+	return env.lookupVar(ident->symbol);
+}
+
+std::shared_ptr<Ecliptix::Values::RuntimeValue> evalBinExprs(Ecliptix::AST::BinaryExpression* binop, Ecliptix::Environment env) {
+	std::shared_ptr<Ecliptix::Values::RuntimeValue> lhsPtr = Ecliptix::Interpreter::evaluate(
+    	std::shared_ptr<Ecliptix::AST::Statement>(std::move(binop->left)), env);
+	Ecliptix::Values::RuntimeValue *lhs = lhsPtr.get();
+
+	std::shared_ptr<Ecliptix::Values::RuntimeValue> rhsPtr = Ecliptix::Interpreter::evaluate(
+    	std::shared_ptr<Ecliptix::AST::Statement>(std::move(binop->right)), env);
+	Ecliptix::Values::RuntimeValue *rhs = rhsPtr.get();
+
 
 
 
@@ -43,20 +56,16 @@ std::unique_ptr<Ecliptix::Values::RuntimeValue> evalBinExprs(Ecliptix::AST::Bina
 		else if(oper == "*")
 			result = lhss.value * rhss.value;
 
-		std::cout << "returning numval with " << result << std::endl;
-
 		return Ecliptix::Generators::createNumberValue(result);
 	} else {
-
-		std::cout << "returning null" << std::endl;
 		return Ecliptix::Generators::createNullValue();
 	}
 }
 
 namespace Ecliptix::Interpreter {
-	std::unique_ptr<Ecliptix::Values::RuntimeValue> evaluate(std::unique_ptr<Ecliptix::AST::Statement> astNode){
+	std::shared_ptr<Ecliptix::Values::RuntimeValue> evaluate(std::shared_ptr<Ecliptix::AST::Statement> astNode, Ecliptix::Environment env){
 		switch(astNode->kind){
-			case Ecliptix::AST::NodeType::NumericLiteral:{
+			case Ecliptix::AST::NodeType::NumericLiteral:{ 
 				const Ecliptix::AST::NumericLiteral* num = dynamic_cast<const Ecliptix::AST::NumericLiteral*>(astNode.get());
 				return Ecliptix::Generators::createNumberValue(num->value);
 			} break;
@@ -66,13 +75,18 @@ namespace Ecliptix::Interpreter {
 			} break;
 			case Ecliptix::AST::NodeType::BinaryExpression:{
 				Ecliptix::AST::BinaryExpression* num = dynamic_cast<Ecliptix::AST::BinaryExpression*>(astNode.get());
-				return evalBinExprs(num);
+				return evalBinExprs(num, env);
 			} break;
 			case Ecliptix::AST::NodeType::Program:{
 			    Ecliptix::AST::Program* num = dynamic_cast<Ecliptix::AST::Program*>(&*astNode);
 
-		    	return evalProgram(num);
+		    	return evalProgram(num, env);
 			} break;
+			case Ecliptix::AST::NodeType::Identifier:{
+				Ecliptix::AST::IdentifierLiteral* num = dynamic_cast<Ecliptix::AST::IdentifierLiteral*>(&*astNode);
+
+		    	return evalIdentifier(num, env);
+			}
 
 			default:{
 				std::cout << "This AST node is not yet set up" << std::endl;
