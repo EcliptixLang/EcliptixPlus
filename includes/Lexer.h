@@ -9,23 +9,44 @@
 
 namespace Ecliptix::Lexer {
     enum class TokenType {
-		Null,
-
-        String,
-        Number,
-        Identifier,
-
-        Equals,
-        OpenParen,
-        CloseParen,
-		OpenBrace,
+		Number,
+		Identifier,
+		String,
+		BinaryOperator,
+		Equals,
+		BinaryEquals,
+		DoubleEquals,
+		NotEquals,
+		Comma,
+		DollarSign,
+		Dot,
+		Colon,
+		Semicolon,
+		OpenParen, 
+		CloseParen, 
+		OpenBrace, 
 		CloseBrace,
-        BinaryOperator,
-
-        Set,
-        Lock,
-
-        _EOF
+	    OpenBracket, 
+		CloseBracket,
+		GreaterThanSign,
+		Slash,
+		Set,
+		Lock,
+		Fun,
+		If,
+		Else,
+		While,
+		For,
+		Return,
+		Break,
+		Async,
+		From,
+		Take,
+		Give,
+		Using,
+		When,
+		Null,
+		_EOF,
     };
 
     struct Token {

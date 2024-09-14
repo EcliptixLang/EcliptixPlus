@@ -8,6 +8,20 @@
 namespace Ecliptix::AST {
     enum class NodeType {
         Program,
+		VarDeclaration,
+		Property,
+		Element,
+		IfStatement,
+		WhileStatement,
+		FunctionDeclaration,
+		EqualityExpression,
+		AssignmentExpression,
+		MemberExpression,
+		ArrayLiteral,
+		StringLiteral,
+		WhenDeclaration,
+		DollarSignNotation,
+		ObjectLiteral,
         NumericLiteral,
 		NullLiteral,
         StringLiteral,
@@ -49,6 +63,30 @@ namespace Ecliptix::AST {
 	        this->kind = kind;
     	}
 	};
+
+	struct StringLiteral : public Expression {
+		std::string value;
+
+		StringLiteral(NodeType kind, std::string value) : value(value) {
+			this->kind = kind;
+		}
+	};
+
+	struct ArrayElement : public Expression {
+	    int index;
+    	std::shared_ptr<Expression> value;
+
+	    ArrayElement(int index, std::shared_ptr<Expression> value)
+    	    : index(index), value(value) {
+	        this->kind = NodeType::Element;
+    	}
+	};
+
+	struct ArrayLiteral : public Expression {
+		std::vector<ArrayElement> elements;
+
+		ArrayLiteral()
+	}
 
 	struct NullLiteral : public Expression {
 
