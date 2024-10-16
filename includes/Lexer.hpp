@@ -2,12 +2,12 @@
 #include <vector>
 #include <string>
 #include <map>
-#include "Utilities.h"
+#include "Utilities.hpp"
 
-#define TokenArr std::vector<Ecliptix::Lexer::Token>
-#define KeywordList std::map<std::string, Ecliptix::Lexer::TokenType>
+#define TokenArr std::vector<Lexer::Token>
+#define KeywordList std::map<std::string, Lexer::TokenType>
 
-namespace Ecliptix::Lexer {
+namespace Lexer {
     enum class TokenType {
 		Number,
 		Identifier,
@@ -41,6 +41,7 @@ namespace Ecliptix::Lexer {
 		Break,
 		Async,
 		From,
+		NL,
 		Take,
 		Give,
 		Using,

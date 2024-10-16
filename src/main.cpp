@@ -1,35 +1,27 @@
-#include <Parser.h>
-#include <Interpreter.h>
+#include <Parser.hpp>
+#include <Interpreter.hpp>
+#include <Lexer.hpp>
 #include <iostream>
 
 int main() {
-	while(true){
-    Ecliptix::Parser::Parser parser;
+    Parser parser;
 
     std::cout << "> ";
 	std::string code;
 	std::getline(std::cin, code);
 	if(code == "exit")
 		exit(0);
-	Ecliptix::Environment env;
 
-    Ecliptix::AST::Program program = parser.produceAST(code);
-	std::shared_ptr<Ecliptix::AST::Program> pointer = std::make_shared<Ecliptix::AST::Program>(program.kind, std::move(program.body));
+	Environment env;
 
-	std::shared_ptr<Ecliptix::Values::RuntimeValue> rval = Ecliptix::Interpreter::evaluate(std::move(pointer), env);
-	Ecliptix::Values::RuntimeValue * val = rval.get();
+	std::unique_ptr<AST::ExprAST> ast = parser.produceAST(code);
 
-	
-	switch(val->type){
-		case Ecliptix::Values::ValueType::Null:
-			std::cout << "NullValue" << std::endl;
-		break;
-		case Ecliptix::Values::ValueType::Number:
-			std::cout << "Number, Value: " << dynamic_cast<Ecliptix::Values::NumberValue&>(*val).value << std::endl;
-		break;
-		default:
-			std::cout << "IDK" << std::endl;
-	}
+    AST::Program* program = dynamic_cast<AST::Program*>(ast.get());
+
+	if(program){
+		Interpreter::evaluate(std::move(ast), std::move(env));
+	} else {
+		return 2;
 	}
     return 0;
 }

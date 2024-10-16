@@ -1,8 +1,8 @@
-#include <Utilities.h>
+#include <Utilities.hpp>
 #include <fstream>
 #include <sstream>
 
-namespace Ecliptix::Utilities {
+namespace Utilities {
     std::string readFile(std::string name) {
         std::stringstream ss;
         std::fstream file(name, std::ios::in);

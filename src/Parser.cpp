@@ -1,316 +1,323 @@
-#include <Parser.h>
-#include <iostream>
-#include <nlohmann/json.hpp>
+#include <Parser.hpp>
+#include <AST.hpp>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
-#define StatementPointer std::shared_ptr<Ecliptix::AST::Statement>
-#define ExpressionPointer std::shared_ptr<Ecliptix::AST::Expression>
-#define ExprArr std::vector<std::shared_ptr<Ecliptix::AST::Expression>>
-#define Token Ecliptix::Lexer::Token
+#define Token Lexer::Token
 
+std::unique_ptr<AST::ExprAST> LogError(const char *Str) {
+  fprintf(stderr, "Error: %s\n", Str);
+  return nullptr;
+}
+bool Parser::NotEOF() {
+  return this->currentToken().type != Lexer::TokenType::_EOF;
+}
 
-namespace Ecliptix::Parser {
+Token Parser::currentToken() {
+  return this->Tokens[0];
+}
 
-    Ecliptix::AST::Program Parser::produceAST(std::string sourceCode) {
-        this->Tokens = Ecliptix::Lexer::tokenize(sourceCode);
-        Ecliptix::AST::Program program(Ecliptix::AST::NodeType::Program, std::vector<std::shared_ptr<Ecliptix::AST::Statement>>{});
+Token Parser::previousToken() {
+  return this->lastToken;
+}
 
-        program.kind = Ecliptix::AST::NodeType::Program;
+Token Parser::nextToken() {
+  lastToken = this->currentToken();
+  return Utilities::shift(this->Tokens);
+}
 
-        while (NotEOF()) {
-            program.body.push_back(this->ParseStatement());
-        }
-		
-        return program;
-    }
+Token Parser::expectToken(Lexer::TokenType type){
+  Token tok = Utilities::shift(this->Tokens);
 
-    bool Parser::NotEOF() {
-        return this->currentToken().type != Ecliptix::Lexer::TokenType::_EOF;
-    }
-
-    Token Parser::currentToken() {
-        return this->Tokens[0];
-    }
-
-    Token Parser::previousToken() {
-        return this->lastToken;
-    }
-
-    Token Parser::nextToken() {
-        lastToken = this->currentToken();
-        return Ecliptix::Utilities::shift(this->Tokens);
-    }
-
-	Token Parser::expectToken(Ecliptix::Lexer::TokenType type){
-		Token tok = Ecliptix::Utilities::shift(this->Tokens);
-
-		if(tok.type == type){
-			return tok;
-		}
-
-		throw "Unexpected token found while parsing";
+	if(tok.type == type){
+	  return tok;
 	}
 
-    StatementPointer Parser::ParseStatement() {
-        switch(this->currentToken().type){
-			case Ecliptix::Lexer::TokenType::Slash:
-				return this->parseComments();
-			case Ecliptix::Lexer::TokenType::Set:
-			case Ecliptix::Lexer::TokenType::Lock:
-				return this->parseVariables();
-			case Ecliptix::Lexer::TokenType::Fun:
-				return this->parseFunctions();
-			case Ecliptix::Lexer::TokenType::If:
-				return this->parseIf();
-			case Ecliptix::Lexer::TokenType::When:
-				return this->parseWhen();
-			case Ecliptix::Lexer::TokenType::While:
-				return this->parseWhile();
-			case Ecliptix::Lexer::TokenType::DollarSign:
-				return this->parseDSNotation();
-			default:
-				return this->ParseExpression();
-		}
-    }
+	throw "Unexpected token found while parsing";
+}
 
-	StatementPointer Parser::parseWhen() {
-		Token token = this->expectToken(Ecliptix::Lexer::TokenType::When);
-		ExpressionPointer conditional = this->ParseExpression();
-		StmtArr consequent{};
-		ExpressionPointer right = {};
-		Ecliptix::Lexer::TokenType _operator = Ecliptix::Lexer::TokenType::BinaryEquals; 
+std::unique_ptr<AST::Program> Parser::produceAST(std::string& sourceCode){
+  Tokens = Lexer::tokenize(sourceCode);
+	std::vector<std::unique_ptr<AST::ExprAST>> body{};
+  
+	while(this->NotEOF()){
+		body.push_back(this->ParseStatement());
+	}
 
-		this->expectToken(Ecliptix::Lexer::TokenType::OpenBrace);
+	std::unique_ptr<AST::Program> program = std::make_unique<AST::Program>(AST::Program(std::move(body)));
+	return program;
+}
 
-		while(this->currentToken().type != Ecliptix::Lexer::TokenType::_EOF && this->currentToken().type != Ecliptix::Lexer::TokenType::CloseBrace){
+std::unique_ptr<AST::ExprAST> Parser::ParseStatement() {
+  switch(this->currentToken().type){
+		case Lexer::TokenType::Slash:
+			return this->parseComments();
+		case Lexer::TokenType::Set:
+		case Lexer::TokenType::Lock:
+			return this->parseVariables();
+		case Lexer::TokenType::Fun:
+			return this->parseFunctions();
+		case Lexer::TokenType::If:
+			return this->parseIf();
+		case Lexer::TokenType::When:
+			return this->parseWhen();
+		case Lexer::TokenType::While:
+			return this->parseWhile();
+		case Lexer::TokenType::DollarSign:
+			return this->parseDSNotation();
+		default:
+			return this->ParseExpression();
+	}
+}
+
+std::unique_ptr<AST::ExprAST> Parser::parseWhen() {
+		Token token = this->expectToken(Lexer::TokenType::When);
+		std::unique_ptr<AST::ExprAST> conditional = this->ParseExpression();
+		std::vector<std::unique_ptr<AST::ExprAST>> consequent{};
+		std::unique_ptr<AST::ExprAST> right = {};
+		Lexer::TokenType _operator = Lexer::TokenType::BinaryEquals; 
+
+		this->expectToken(Lexer::TokenType::OpenBrace);
+
+		while(this->currentToken().type != Lexer::TokenType::_EOF && this->currentToken().type != Lexer::TokenType::CloseBrace){
 			consequent.push_back(this->ParseStatement());
 		}
 
-		this->expectToken(Ecliptix::Lexer::TokenType::CloseBrace);
+		this->expectToken(Lexer::TokenType::CloseBrace);
 
-		return Ecliptix::Generators::createWhenDeclaration(conditional, _operator, consequent);
-	}
+		return std::make_unique<AST::WhenDeclaration>(AST::WhenDeclaration(std::move(conditional), _operator, std::move(consequent)));
+}
 
-	StatementPointer Parser::parseWhile() {
-		Token token = this->expectToken(Ecliptix::Lexer::TokenType::While);
-		ExpressionPointer conditional = this->ParseExpression();
-		StmtArr consequent{};
-		ExpressionPointer right = {};
-		Ecliptix::Lexer::TokenType _operator = Ecliptix::Lexer::TokenType::BinaryEquals;
+std::unique_ptr<AST::ExprAST> Parser::parseWhile() {
+		Token token = this->expectToken(Lexer::TokenType::While);
+		std::unique_ptr<AST::ExprAST> conditional = this->ParseExpression();
+		std::vector<std::unique_ptr<AST::ExprAST>> consequent{};
+		std::unique_ptr<AST::ExprAST> right = {};
+		Lexer::TokenType _operator = Lexer::TokenType::BinaryEquals;
 
-		this->expectToken(Ecliptix::Lexer::TokenType::OpenBrace);
+		this->expectToken(Lexer::TokenType::OpenBrace);
 
-		while(this->currentToken().type != Ecliptix::Lexer::TokenType::_EOF && this->currentToken().type != Ecliptix::Lexer::TokenType::CloseBrace){
+		while(this->currentToken().type != Lexer::TokenType::_EOF && this->currentToken().type != Lexer::TokenType::CloseBrace){
 			consequent.push_back(this->ParseStatement());
 		}
 
-		this->expectToken(Ecliptix::Lexer::TokenType::CloseBrace);
+		this->expectToken(Lexer::TokenType::CloseBrace);
 
-		return Ecliptix::Generators::createWhileStatement(conditional, _operator, consequent);
+		return std::make_unique<AST::WhileDeclaration>(AST::WhileDeclaration(std::move(conditional), _operator, std::move(consequent)));
 	}
 
-	StatementPointer Parser::parseComments() {
+std::unique_ptr<AST::ExprAST> Parser::parseComments() {
 		this->nextToken();
 
-		while(this->nextToken().type != Ecliptix::Lexer::TokenType::Slash && this->NotEOF()){
+		while(this->nextToken().type != Lexer::TokenType::NL && this->NotEOF()){
 			continue;
 		}
 
-		return this->ParsePrimaryExpression();
-	}
+		return ParseStatement();
+}
 
-	StatementPointer Parser::parseIf() {
-		Token token = this->expectToken(Ecliptix::Lexer::TokenType::If);
-		ExpressionPointer conditional = this->ParseExpression();
-		StmtArr consequent{};
-		Ecliptix::Lexer::TokenType _operator = Ecliptix::Lexer::TokenType::BinaryEquals;
+std::unique_ptr<AST::ExprAST> Parser::parseIf() {
+		Token token = this->expectToken(Lexer::TokenType::If);
+		std::unique_ptr<AST::ExprAST> conditional = this->ParseExpression();
+		std::vector<std::unique_ptr<AST::ExprAST>> consequent{};
+		Lexer::TokenType _operator = Lexer::TokenType::BinaryEquals;
 
-		this->expectToken(Ecliptix::Lexer::TokenType::OpenBrace);
+		this->expectToken(Lexer::TokenType::OpenBrace);
 
-		while(this->currentToken().type != Ecliptix::Lexer::TokenType::_EOF && this->currentToken().type != Ecliptix::Lexer::TokenType::CloseBrace){
+		while(this->currentToken().type != Lexer::TokenType::_EOF && this->currentToken().type != Lexer::TokenType::CloseBrace){
 			consequent.push_back(this->ParseStatement());
 		}
 
-		this->expectToken(Ecliptix::Lexer::TokenType::CloseBrace);
+		this->expectToken(Lexer::TokenType::CloseBrace);
 		
-		StmtArr alternate{};
+		std::vector<std::unique_ptr<AST::ExprAST>> alternate{};
 
-		if(this->currentToken().type == Ecliptix::Lexer::TokenType::Else){
+		if(this->currentToken().type == Lexer::TokenType::Else){
 			this->nextToken();
-			if(this->currentToken().type == Ecliptix::Lexer::TokenType::If){
-				alternate = {this->parseIf()};
+			if(this->currentToken().type == Lexer::TokenType::If){
+        alternate.push_back(std::move(this->parseIf()));
 			} else {
-				alternate = {};
 
-				this->expectToken(Ecliptix::Lexer::TokenType::OpenBrace);
+				this->expectToken(Lexer::TokenType::OpenBrace);
 
-				while(this->currentToken().type != Ecliptix::Lexer::TokenType::_EOF && this->currentToken().type != Ecliptix::Lexer::TokenType::CloseBrace){
+				while(this->currentToken().type != Lexer::TokenType::_EOF && this->currentToken().type != Lexer::TokenType::CloseBrace){
 					alternate.push_back(this->ParseStatement());
 				}
 
-				this->expectToken(Ecliptix::Lexer::TokenType::CloseBrace);
+				this->expectToken(Lexer::TokenType::CloseBrace);
 			}
 		}
 
-		return Ecliptix::Generators::createIfStatement(conditional, _operator, consequent, alternate);
+		return std::make_unique<AST::IfStatement>(AST::IfStatement(std::move(conditional), _operator, std::move(consequent), std::move(alternate)));
 	}
 
-	StatementPointer Parser::parseFunctions() {
+std::unique_ptr<AST::ExprAST> Parser::parseFunctions() {
 		Token token = this->nextToken();
-		std::string name = this->expectToken(Ecliptix::Lexer::TokenType::Identifier).value;
-		ExprArr args = this->parseArgs();
+		std::string name = this->expectToken(Lexer::TokenType::Identifier).value;
+		std::vector<std::unique_ptr<AST::ExprAST>> args = this->parseArgs();
 
 		std::vector<std::string> params{};
 
-		for(ExpressionPointer arg : args){
-			Ecliptix::AST::Expression* expr = arg.get();
-			if(expr->kind != Ecliptix::AST::NodeType::Identifier){
+		for(auto& arg : std::move(args)){
+			AST::ExprAST* expr = arg.get();
+			if(expr->getType() != "Identifier"){
 				throw "Parameters expected inside function declaration";
 			}
 
-			Ecliptix::AST::IdentifierLiteral* id = dynamic_cast<Ecliptix::AST::IdentifierLiteral*>(arg.get());
-			params.push_back(id->symbol);
+      AST::Identifier* id = dynamic_cast<AST::Identifier*>(arg.get());
+			
+			params.push_back(id->name);
 		}
 
-		this->expectToken(Ecliptix::Lexer::TokenType::OpenBrace);
+		this->expectToken(Lexer::TokenType::OpenBrace);
 
-		StmtArr body{};
+		std::vector<std::unique_ptr<AST::ExprAST>> body{};
 
-		while(this->currentToken().type != Ecliptix::Lexer::TokenType::_EOF && this->currentToken().type != Ecliptix::Lexer::TokenType::CloseBrace){
+		while(this->currentToken().type != Lexer::TokenType::_EOF && this->currentToken().type != Lexer::TokenType::CloseBrace){
 			body.push_back(this->ParseStatement());
 		}
 
-		this->expectToken(Ecliptix::Lexer::TokenType::CloseBrace);
+		this->expectToken(Lexer::TokenType::CloseBrace);
 
-		return Ecliptix::Generators::createFunctionDeclaration(params, name, body, Ecliptix::AST::NodeType::FunctionDeclaration);
-	}
+		return std::make_unique<AST::Function>(AST::Function(params, name, std::move(body)));
+}
 
-	StatementPointer Parser::parseVariables() {
+std::unique_ptr<AST::ExprAST> Parser::parseVariables() {
 		Token token = this->nextToken();
-		bool isConstant = token.type == Ecliptix::Lexer::TokenType::Lock;
-		std::string ident = this->expectToken(Ecliptix::Lexer::TokenType::Identifier).value;
+		bool isConstant = token.type == Lexer::TokenType::Lock;
+		std::string ident = this->expectToken(Lexer::TokenType::Identifier).value;
 		std::string type = "";
 
 		this->nextToken();
 
-		type = this->expectToken(Ecliptix::Lexer::TokenType::Identifier).value;
+		type = this->expectToken(Lexer::TokenType::Identifier).value;
 
-		this->expectToken(Ecliptix::Lexer::TokenType::Equals);
+		this->expectToken(Lexer::TokenType::Equals);
 
-		ExpressionPointer value = this->ParseExpression();
-		return Ecliptix::Generators::createVarDeclaration(isConstant, ident, value);
+		std::unique_ptr<AST::ExprAST> value = this->ParseExpression();
+		return std::make_unique<AST::VariableExpr>(AST::VariableExpr(ident, type, std::move(value), isConstant));
 	}
 
-	ExpressionPointer Parser::parseAssignment() {
-		ExpressionPointer left = this->parseArrays();
+std::unique_ptr<AST::ExprAST> Parser::parseAssignment() {
+		std::unique_ptr<AST::ExprAST> left = this->parseArrays();
 
-		if(this->currentToken().type == Ecliptix::Lexer::TokenType::Equals){
+		if(this->currentToken().type == Lexer::TokenType::Equals){
 			Token token = this->nextToken();
-			ExpressionPointer value = this->parseAssignment();
+			std::unique_ptr<AST::ExprAST> value = this->parseAssignment();
 
-			return Ecliptix::Generators::createAssignmentExpr(left, value);
+			return std::make_unique<AST::AssignmentExpr>(AST::AssignmentExpr(std::move(left), std::move(value)));
 		}
 
 		return left;
 	}
 
-	ExpressionPointer Parser::parseArrays() {
+std::unique_ptr<AST::ExprAST> Parser::parseArrays() {
 		Token nex = this->currentToken();
-		if(nex.type != Ecliptix::Lexer::TokenType::OpenBracket){
+		if(nex.type != Lexer::TokenType::OpenBracket){
 			return this->parseDSNotation();
 		}
 
 		this->nextToken();
 
 		int num = -1;
-		std::vector<std::shared_ptr<Ecliptix::AST::ArrayElement>> arr{};
+		std::vector<std::unique_ptr<AST::ExprAST>> arr{};
 
-		while(this->NotEOF() && this->currentToken().type != Ecliptix::Lexer::TokenType::CloseBracket) {
-			ExpressionPointer key = this->ParseExpression();
+		while(this->NotEOF() && this->currentToken().type != Lexer::TokenType::CloseBracket) {
+			std::unique_ptr<AST::ExprAST> key = this->ParseExpression();
 			num++;
-			Ecliptix::Lexer::TokenType ttype = this->nextToken().type;
-			if(ttype == Ecliptix::Lexer::TokenType::Comma || ttype == Ecliptix::Lexer::TokenType::CloseBracket){
-				arr.push_back(Ecliptix::Generators::createArrayElement(num, key));
+			Lexer::TokenType ttype = this->nextToken().type;
+			if(ttype == Lexer::TokenType::Comma || ttype == Lexer::TokenType::CloseBracket){
+				arr.push_back(std::move(key));
 				continue;
 			}
 
-			if(ttype != Ecliptix::Lexer::TokenType::CloseBracket){
-				if(this->currentToken().type == Ecliptix::Lexer::TokenType::Comma) throw std::runtime_error("idk");
+			if(ttype != Lexer::TokenType::CloseBracket){
+				if(this->currentToken().type == Lexer::TokenType::Comma) throw std::runtime_error("idk");
 			}
 		}
 
-		this->expectToken(Ecliptix::Lexer::TokenType::CloseBracket);
+		this->expectToken(Lexer::TokenType::CloseBracket);
 
-		return Ecliptix::Generators::createArrayLiteral(arr);
+		return std::make_unique<AST::Array>(AST::Array(std::move(arr)));
 	}
 
-	ExpressionPointer Parser::parseDSNotation() {
+std::unique_ptr<AST::ExprAST> Parser::parseDSNotation() {
 		Token token = this->currentToken();
-		if(this->Tokens[1].type != Ecliptix::Lexer::TokenType::DollarSign){
+		if(this->Tokens[1].type != Lexer::TokenType::DollarSign){
 			return this->parseObjects();
 		}
 		this->nextToken();
-		Token idk = this->expectToken(Ecliptix::Lexer::TokenType::String);
+		Token idk = this->expectToken(Lexer::TokenType::String);
 
-		return Ecliptix::Generators::createDollarSignNotation(Ecliptix::Generators::createString(idk.value));
+		return std::make_unique<AST::ShellCMD>(AST::ShellCMD(idk.value));
 	}
 
-	ExpressionPointer Parser::parseObjects() {
-		if(this->currentToken().type != Ecliptix::Lexer::TokenType::OpenBrace){
+std::unique_ptr<AST::ExprAST> Parser::parseObjects() {
+		if(this->currentToken().type != Lexer::TokenType::OpenBrace){
 			return this->ParseAdditiveExpression();
 		}
 
 		Token token = this->nextToken();
-		std::vector<std::shared_ptr<Ecliptix::AST::Property>> properties{};
+		std::vector<std::unique_ptr<AST::ExprAST>> map;
 
-		while(this->NotEOF() && this->currentToken().type != Ecliptix::Lexer::TokenType::CloseBrace){
-			std::string key = this->expectToken(Ecliptix::Lexer::TokenType::Identifier).value;
+		while(this->NotEOF() && this->currentToken().type != Lexer::TokenType::CloseBrace){
+			std::string key = this->expectToken(Lexer::TokenType::Identifier).value;
 
-			this->expectToken(Ecliptix::Lexer::TokenType::Colon);
+			this->expectToken(Lexer::TokenType::Colon);
 
-			ExpressionPointer value = this->ParseExpression();
-			properties.push_back(Ecliptix::Generators::createProperty(key, value));
-			if(this->currentToken().type != Ecliptix::Lexer::TokenType::CloseBrace)
-				this->expectToken(Ecliptix::Lexer::TokenType::Comma);
+			std::unique_ptr<AST::ExprAST> value = this->ParseExpression();
+      map.push_back(std::make_unique<AST::Element>(AST::Element(key, std::move(value))));
+			if(this->currentToken().type != Lexer::TokenType::CloseBrace)
+				this->expectToken(Lexer::TokenType::Comma);
 		}
 
-		this->expectToken(Ecliptix::Lexer::TokenType::CloseBrace);
-		return Ecliptix::Generators::createObjectLiteral(properties);
+		this->expectToken(Lexer::TokenType::CloseBrace);
+		return std::make_unique<AST::Object>(AST::Object(std::move(map)));
 	}
 	
-	ExpressionPointer Parser::parseMemberCalls() {
-		ExpressionPointer member = this->parseMember();
-		if(this->currentToken().type == Ecliptix::Lexer::TokenType::OpenParen){
-			return this->parseCalls(member);
+std::unique_ptr<AST::ExprAST> Parser::parseMemberCalls() {
+		std::unique_ptr<AST::ExprAST> member = this->parseMember();
+		if(this->currentToken().type == Lexer::TokenType::OpenParen){
+			return this->parseCalls(std::move(member));
 		}
 
 		return member;
 	}
 
-	ExpressionPointer Parser::parseCalls(ExpressionPointer caller) {
-		Ecliptix::AST::Expression expr =* caller.get();
-		if(expr.kind == Ecliptix::AST::NodeType::NumericLiteral){
-			this->ParsePrimaryExpression();
+std::unique_ptr<AST::ExprAST>	 Parser::parseCalls(std::unique_ptr<AST::ExprAST> caller) {
+		AST::NumberExpr* expr = dynamic_cast<AST::NumberExpr*>(caller.get());
+
+    if(expr){
+      if(expr->getType() == "Number")
+  			this->ParsePrimary();
 		}
 
-		ExpressionPointer call = Ecliptix::Generators::createCallExpr(this->parseArgs(), caller);
-		if(this->currentToken().type == Ecliptix::Lexer::TokenType::OpenParen){
-			call = this->parseCalls(call);
+		std::unique_ptr<AST::ExprAST> call = std::make_unique<AST::CallExpr>(AST::CallExpr(caller,this->parseArgs()));
+		if(this->currentToken().type == Lexer::TokenType::OpenParen){
+			call = this->parseCalls(std::move(call));
 		}
 
 		return call;
 	}
-	ExprArr Parser::parseArgs() {
-		this->expectToken(Ecliptix::Lexer::TokenType::OpenParen);
-		ExprArr args;
-		if(this->currentToken().type == Ecliptix::Lexer::TokenType::CloseParen) args = {}; else args = this->parseArgsList();
-		this->expectToken(Ecliptix::Lexer::TokenType::CloseParen);
+std::vector<std::unique_ptr<AST::ExprAST>>	Parser::parseArgs() {
+		this->expectToken(Lexer::TokenType::OpenParen);
+		std::vector<std::unique_ptr<AST::ExprAST>> args{};
+		if(this->currentToken().type != Lexer::TokenType::CloseParen) args = this->parseArgsList();
+		this->expectToken(Lexer::TokenType::CloseParen);
 
 		return args;
 	}
 
-	ExprArr Parser::parseArgsList() {
-		ExprArr args{this->parseAssignment()};
-		while(this->currentToken().type == Ecliptix::Lexer::TokenType::Comma){
+std::vector<std::unique_ptr<AST::ExprAST>> Parser::parseArgsList() {
+		std::vector<std::unique_ptr<AST::ExprAST>> args{};
+    args.push_back(this->parseAssignment());
+		while(this->currentToken().type == Lexer::TokenType::Comma){
 			this->nextToken();
 			args.push_back(this->parseAssignment());
 		}
@@ -318,84 +325,83 @@ namespace Ecliptix::Parser {
 		return args;
 	}
 
-	ExpressionPointer Parser::parseMember() {
-		ExpressionPointer object = this->ParsePrimaryExpression();
-		while(this->currentToken().type == Ecliptix::Lexer::TokenType::Dot || this->currentToken().type == Ecliptix::Lexer::TokenType::OpenBracket){
+std::unique_ptr<AST::ExprAST> Parser::parseMember() {
+		std::unique_ptr<AST::ExprAST> object = this->ParsePrimary();
+		while(this->currentToken().type == Lexer::TokenType::Dot || this->currentToken().type == Lexer::TokenType::OpenBracket){
 			Token _operator = this->nextToken();
-			ExpressionPointer property;
+			std::unique_ptr<AST::ExprAST> property;
 			bool computed;
 
-			if(_operator.type == Ecliptix::Lexer::TokenType::Dot){
+			if(_operator.type == Lexer::TokenType::Dot){
 				computed = false;
-				property = this->ParsePrimaryExpression();
-				if(property.get()->kind != Ecliptix::AST::NodeType::Identifier){
+				property = this->ParsePrimary();
+				if(property.get()->getType() != "Identifier"){
 					throw std::runtime_error("idk");
 				}
 			} else {
 				computed = true;
 				property = this->ParseExpression();
-				this->expectToken(Ecliptix::Lexer::TokenType::CloseBracket);
+				this->expectToken(Lexer::TokenType::CloseBracket);
 			}
 
-			object = Ecliptix::Generators::createMemberExpr(object, property, computed);
+			object = std::make_unique<AST::MemberExpr>(AST::MemberExpr(std::move(object), std::move(property), computed));
 		}
 
 		return object;
 	}
 
 
-    ExpressionPointer Parser::ParseExpression() {
+std::unique_ptr<AST::ExprAST> Parser::ParseExpression() {
         return this->parseAssignment();
     }
 
-	ExpressionPointer Parser::ParseAdditiveExpression(){
-		ExpressionPointer left = this->ParseMultiplicativeExpression();
-		std::shared_ptr<Ecliptix::AST::BinaryExpression> expr;
+std::unique_ptr<AST::ExprAST> Parser::ParseAdditiveExpression(){
+		std::unique_ptr<AST::ExprAST> left = this->ParseMultiplicativeExpression();
+		std::unique_ptr<AST::BinaryExpr> expr;
 		while(this->currentToken().value == "+" || this->currentToken().value == "-"){
 			std::string _operator = this->nextToken().value;
-			ExpressionPointer right = this->ParseMultiplicativeExpression();
+      std::unique_ptr<AST::ExprAST> right = this->ParseMultiplicativeExpression();
 
-			expr = std::make_shared<Ecliptix::AST::BinaryExpression>(left, right, _operator);
+			expr = std::make_unique<AST::BinaryExpr>(AST::BinaryExpr(_operator.c_str()[0], std::move(left), std::move(right)));
 			left = std::move(expr);
 		}
 
 		return left;
 	}
 
-	ExpressionPointer Parser::ParseMultiplicativeExpression(){
-		ExpressionPointer left = this->ParsePrimaryExpression();
-		std::shared_ptr<Ecliptix::AST::BinaryExpression> expr;
+std::unique_ptr<AST::ExprAST> Parser::ParseMultiplicativeExpression(){
+		std::unique_ptr<AST::ExprAST> left = this->ParsePrimary();
+		std::unique_ptr<AST::BinaryExpr> expr;
 		while(this->currentToken().value == "/" || this->currentToken().value == "*"){
 			std::string _operator = this->nextToken().value;
-			ExpressionPointer right = this->ParsePrimaryExpression();
+			std::unique_ptr<AST::ExprAST> right = this->ParsePrimary();
 			
-			expr = std::make_shared<Ecliptix::AST::BinaryExpression>(left, right, _operator);
+			expr = std::make_unique<AST::BinaryExpr>(AST::BinaryExpr(_operator.c_str()[0], std::move(left), std::move(right)));
 			left = std::move(expr);
 		}
 
 		return left;
 	}
 
-    ExpressionPointer Parser::ParsePrimaryExpression() {
+std::unique_ptr<AST::ExprAST> Parser::ParsePrimary() {
         Token token = this->currentToken();
 
         switch (token.type) {
-            case Ecliptix::Lexer::TokenType::Identifier:
-                return Ecliptix::Generators::createIdent(this->nextToken().value);
-            case Ecliptix::Lexer::TokenType::Number:
-                return Ecliptix::Generators::createNumber(std::stoi(this->nextToken().value));
-			case Ecliptix::Lexer::TokenType::OpenParen:{
+            case Lexer::TokenType::Identifier:
+                return std::make_unique<AST::Identifier>(AST::Identifier(this->nextToken().value));
+            case Lexer::TokenType::Number:
+                return std::make_unique<AST::NumberExpr>(AST::NumberExpr(std::stod(this->nextToken().value)));
+			case Lexer::TokenType::OpenParen:{
 				this->nextToken();
-				ExpressionPointer value = this->ParseExpression();
-				this->expectToken(Ecliptix::Lexer::TokenType::CloseParen);
+				std::unique_ptr<AST::ExprAST> value = this->ParseExpression();
+				this->expectToken(Lexer::TokenType::CloseParen);
 				return value;
 			}
-			case Ecliptix::Lexer::TokenType::Null:
+			case Lexer::TokenType::Null:
 				this->nextToken();
-				return Ecliptix::Generators::createNull();
+				return nullptr;
             default:
                 std::cout << "Unexpected token found during parsing" << this->currentToken().value << std::endl;
                 exit(1);
         }
-    }
 }

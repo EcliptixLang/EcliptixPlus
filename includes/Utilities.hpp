@@ -6,7 +6,7 @@
 
 #define CharArr std::vector<char>
 
-namespace Ecliptix::Utilities {
+namespace Utilities {
     std::string readFile(std::string name);
     CharArr split(std::string src);
 

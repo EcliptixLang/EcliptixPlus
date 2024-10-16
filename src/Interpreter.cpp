@@ -1,19 +1,18 @@
-#include <Values.h>
-#include <AST.h>
-#include <Generators.h>
-#include <Utilities.h>
-#include <Interpreter.h>
-#include <ENV.h>
-
-std::shared_ptr<Ecliptix::Values::RuntimeValue> evalProgram(Ecliptix::AST::Program* program, Ecliptix::Environment env) {
+#include <Values.hpp>
+#include <AST.hpp>
+#include <Utilities.hpp>
+#include <Interpreter.hpp>
+#include <ENV.hpp>
+/*
+std::unique_ptr<Values::Runtime> evalProgram(AST::Program* program, Environment env) {
     if (!program) {
         std::cerr << "no program found??" << std::endl;
         exit(1);
 	}
-    std::shared_ptr<Ecliptix::Values::RuntimeValue> val;
+    std::unique_ptr<Values::Runtime> val;
 
-    for (auto& stment : program->body) {
-    	val = Ecliptix::Interpreter::evaluate(std::move(stment), env);
+    for (auto& stment : program.body) {
+    	val = Interpreter::evaluate(std::move(stment), env);
 	}
 
 
@@ -21,7 +20,7 @@ std::shared_ptr<Ecliptix::Values::RuntimeValue> evalProgram(Ecliptix::AST::Progr
     return val;
 }
 
-std::shared_ptr<Ecliptix::Values::RuntimeValue> evalIdentifier(Ecliptix::AST::IdentifierLiteral* ident, Ecliptix::Environment env) {
+std::unique_ptr<Values::RuntimeValue> evalIdentifier(AST::IdentifierLiteral* ident, Environment env) {
     if (!ident) {
         std::cerr << "no ident found" << std::endl;
         exit(1);
@@ -30,21 +29,21 @@ std::shared_ptr<Ecliptix::Values::RuntimeValue> evalIdentifier(Ecliptix::AST::Id
 	return env.lookupVar(ident->symbol);
 }
 
-std::shared_ptr<Ecliptix::Values::RuntimeValue> evalBinExprs(Ecliptix::AST::BinaryExpression* binop, Ecliptix::Environment env) {
-	std::shared_ptr<Ecliptix::Values::RuntimeValue> lhsPtr = Ecliptix::Interpreter::evaluate(
-    	std::shared_ptr<Ecliptix::AST::Statement>(std::move(binop->left)), env);
-	Ecliptix::Values::RuntimeValue *lhs = lhsPtr.get();
+std::unique_ptr<Values::RuntimeValue> evalBinExprs(AST::BinaryExpression* binop, Environment env) {
+	std::unique_ptr<Values::RuntimeValue> lhsPtr = Interpreter::evaluate(
+    	std::unique_ptr<AST::Statement>(std::move(binop->left)), env);
+	Values::RuntimeValue *lhs = lhsPtr.get();
 
-	std::shared_ptr<Ecliptix::Values::RuntimeValue> rhsPtr = Ecliptix::Interpreter::evaluate(
-    	std::shared_ptr<Ecliptix::AST::Statement>(std::move(binop->right)), env);
-	Ecliptix::Values::RuntimeValue *rhs = rhsPtr.get();
-
-
+	std::unique_ptr<Values::RuntimeValue> rhsPtr = Interpreter::evaluate(
+    	std::unique_ptr<AST::Statement>(std::move(binop->right)), env);
+	Values::RuntimeValue *rhs = rhsPtr.get();
 
 
-	if(lhs->type == Ecliptix::Values::ValueType::Number && rhs->type == Ecliptix::Values::ValueType::Number){
-		Ecliptix::Values::NumberValue lhss = dynamic_cast<Ecliptix::Values::NumberValue&>(*lhs);
-		Ecliptix::Values::NumberValue rhss = dynamic_cast<Ecliptix::Values::NumberValue&>(*rhs);
+
+
+	if(lhs->type == Values::ValueType::Number && rhs->type == Values::ValueType::Number){
+		Values::NumberValue lhss = dynamic_cast<Values::NumberValue&>(*lhs);
+		Values::NumberValue rhss = dynamic_cast<Values::NumberValue&>(*rhs);
 		std::string oper = binop->_operator;
 		int result;
 		if(oper == "+")
@@ -56,34 +55,45 @@ std::shared_ptr<Ecliptix::Values::RuntimeValue> evalBinExprs(Ecliptix::AST::Bina
 		else if(oper == "*")
 			result = lhss.value * rhss.value;
 
-		return Ecliptix::Generators::createNumberValue(result);
+		return Values::Number(result);
 	} else {
-		return Ecliptix::Generators::createNullValue();
+		return Generators::createNullValue();
 	}
 }
+*/
+namespace Interpreter {
+	std::unique_ptr<Values::Runtime> evaluate(std::unique_ptr<AST::ExprAST> astNode, Environment env){
 
-namespace Ecliptix::Interpreter {
-	std::shared_ptr<Ecliptix::Values::RuntimeValue> evaluate(std::shared_ptr<Ecliptix::AST::Statement> astNode, Ecliptix::Environment env){
-		switch(astNode->kind){
-			case Ecliptix::AST::NodeType::NumericLiteral:{ 
-				const Ecliptix::AST::NumericLiteral* num = dynamic_cast<const Ecliptix::AST::NumericLiteral*>(astNode.get());
-				return Ecliptix::Generators::createNumberValue(num->value);
+		std::string type = astNode.get()->getType();
+		if(type == "Number"){
+			AST::NumberExpr* number = dynamic_cast<AST::NumberExpr*>(std::move(astNode.get()));
+			std::cout << "numbah " << number->Value << "\n";
+		}else if(type == "Program"){
+			AST::Program* program = dynamic_cast<AST::Program*>(std::move(astNode.get()));
+			for(auto& stmt : program->body){
+				evaluate(std::move(stmt), std::move(env));
+			}
+		}
+		/*switch(astNode->kind){
+			case AST::NodeType::NumericLiteral:{ 
+				const AST::NumericLiteral* num = dynamic_cast<const AST::NumericLiteral*>(astNode.get());
+				return Generators::createNumberValue(num->value);
 			} break;
-			case Ecliptix::AST::NodeType::NullLiteral:{
-				const Ecliptix::AST::NullLiteral* num = dynamic_cast<const Ecliptix::AST::NullLiteral*>(astNode.get());
-				return Ecliptix::Generators::createNullValue();
+			case AST::NodeType::NullLiteral:{
+				const AST::NullLiteral* num = dynamic_cast<const AST::NullLiteral*>(astNode.get());
+				return Generators::createNullValue();
 			} break;
-			case Ecliptix::AST::NodeType::BinaryExpression:{
-				Ecliptix::AST::BinaryExpression* num = dynamic_cast<Ecliptix::AST::BinaryExpression*>(astNode.get());
+			case AST::NodeType::BinaryExpression:{
+				AST::BinaryExpression* num = dynamic_cast<AST::BinaryExpression*>(astNode.get());
 				return evalBinExprs(num, env);
 			} break;
-			case Ecliptix::AST::NodeType::Program:{
-			    Ecliptix::AST::Program* num = dynamic_cast<Ecliptix::AST::Program*>(&*astNode);
+			case AST::NodeType::Program:{
+			    AST::Program* num = dynamic_cast<AST::Program*>(&*astNode);
 
 		    	return evalProgram(num, env);
 			} break;
-			case Ecliptix::AST::NodeType::Identifier:{
-				Ecliptix::AST::IdentifierLiteral* num = dynamic_cast<Ecliptix::AST::IdentifierLiteral*>(&*astNode);
+			case AST::NodeType::Identifier:{
+				AST::IdentifierLiteral* num = dynamic_cast<AST::IdentifierLiteral*>(&*astNode);
 
 		    	return evalIdentifier(num, env);
 			}
@@ -93,6 +103,6 @@ namespace Ecliptix::Interpreter {
 				exit(1);
 			} break;
 				
-		}
+		}*/
 	}
 }
