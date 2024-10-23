@@ -4,8 +4,12 @@
 
 namespace Utilities {
     std::string readFile(std::string name) {
+       std::ifstream file(name);
+        if (!file.is_open()) {
+            throw std::runtime_error("Unable to open file: " + name);
+        }
+
         std::stringstream ss;
-        std::fstream file(name, std::ios::in);
         ss << file.rdbuf();
         return ss.str();
     }

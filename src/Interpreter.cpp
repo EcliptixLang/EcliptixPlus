@@ -3,64 +3,8 @@
 #include <Utilities.hpp>
 #include <Interpreter.hpp>
 #include <ENV.hpp>
-/*
-std::unique_ptr<Values::Runtime> evalProgram(AST::Program* program, Environment env) {
-    if (!program) {
-        std::cerr << "no program found??" << std::endl;
-        exit(1);
-	}
-    std::unique_ptr<Values::Runtime> val;
+#include <FunctionValues.hpp>
 
-    for (auto& stment : program.body) {
-    	val = Interpreter::evaluate(std::move(stment), env);
-	}
-
-
-
-    return val;
-}
-
-std::unique_ptr<Values::RuntimeValue> evalIdentifier(AST::IdentifierLiteral* ident, Environment env) {
-    if (!ident) {
-        std::cerr << "no ident found" << std::endl;
-        exit(1);
-	}
-
-	return env.lookupVar(ident->symbol);
-}
-
-std::unique_ptr<Values::RuntimeValue> evalBinExprs(AST::BinaryExpression* binop, Environment env) {
-	std::unique_ptr<Values::RuntimeValue> lhsPtr = Interpreter::evaluate(
-    	std::unique_ptr<AST::Statement>(std::move(binop->left)), env);
-	Values::RuntimeValue *lhs = lhsPtr.get();
-
-	std::unique_ptr<Values::RuntimeValue> rhsPtr = Interpreter::evaluate(
-    	std::unique_ptr<AST::Statement>(std::move(binop->right)), env);
-	Values::RuntimeValue *rhs = rhsPtr.get();
-
-
-
-
-	if(lhs->type == Values::ValueType::Number && rhs->type == Values::ValueType::Number){
-		Values::NumberValue lhss = dynamic_cast<Values::NumberValue&>(*lhs);
-		Values::NumberValue rhss = dynamic_cast<Values::NumberValue&>(*rhs);
-		std::string oper = binop->_operator;
-		int result;
-		if(oper == "+")
-			result = lhss.value + rhss.value;
-		else if(oper == "-")
-			result = lhss.value - rhss.value;
-		else if(oper == "/")
-			result = lhss.value / rhss.value;
-		else if(oper == "*")
-			result = lhss.value * rhss.value;
-
-		return Values::Number(result);
-	} else {
-		return Generators::createNullValue();
-	}
-}
-*/
 namespace Interpreter {
 	std::unique_ptr<Values::Runtime> evaluate(std::unique_ptr<AST::ExprAST> astNode, Environment env){
 
@@ -68,41 +12,40 @@ namespace Interpreter {
 		if(type == "Number"){
 			AST::NumberExpr* number = dynamic_cast<AST::NumberExpr*>(std::move(astNode.get()));
 			std::cout << "numbah " << number->Value << "\n";
+			return std::make_unique<Values::Number>(Values::Number(number->Value));
 		}else if(type == "Program"){
 			AST::Program* program = dynamic_cast<AST::Program*>(std::move(astNode.get()));
-			for(auto& stmt : program->body){
-				evaluate(std::move(stmt), std::move(env));
+			int i = 0;
+			while(i != program->body.size()){
+				std::unique_ptr<AST::ExprAST> expr = std::move(program->body[i]);
+				evaluate(std::move(expr), std::move(env));
+				i++;
 			}
+			std::cout << "program done!\n";
+		} else if(type == "VarExpr") {
+			AST::VariableExpr* var = dynamic_cast<AST::VariableExpr*>(std::move(astNode.get()));
+
+			env.declareVar(var->Name, evaluate(std::move(var->Value), std::move(env)), var->constant);
+		} else if(type == "CallExpr") {
+			AST::CallExpr* call = dynamic_cast<AST::CallExpr*>(std::move(astNode.get()));
+			std::vector<std::unique_ptr<Values::Runtime>> args{};
+			for(auto& arg : call->Args){
+				args.push_back(evaluate(std::move(arg), std::move(env)));
+			}
+			std::string calleeType = call->Callee.get()->getType();
+			if(calleeType != "Identifier")
+				throw std::runtime_error("Callee is not an identifier");
+			AST::Identifier* ident = dynamic_cast<AST::Identifier*>(std::move(call->Callee.get()));
+			std::unique_ptr<Values::Runtime> fun = env.lookupVar(ident->name);
+			if(fun.get()->type() != "native-fn")
+				throw std::runtime_error("Non function is trying to get called.");
+			NativeFN* fn = dynamic_cast<NativeFN*>(std::move(fun.get()));
+			
+			fn->call(std::move(args), env);
+
+		} else {
+			std::cerr << "This AST Node is not yet set up for interpretation.\n" << "- Type: " << type << "\n";
+			exit(1);
 		}
-		/*switch(astNode->kind){
-			case AST::NodeType::NumericLiteral:{ 
-				const AST::NumericLiteral* num = dynamic_cast<const AST::NumericLiteral*>(astNode.get());
-				return Generators::createNumberValue(num->value);
-			} break;
-			case AST::NodeType::NullLiteral:{
-				const AST::NullLiteral* num = dynamic_cast<const AST::NullLiteral*>(astNode.get());
-				return Generators::createNullValue();
-			} break;
-			case AST::NodeType::BinaryExpression:{
-				AST::BinaryExpression* num = dynamic_cast<AST::BinaryExpression*>(astNode.get());
-				return evalBinExprs(num, env);
-			} break;
-			case AST::NodeType::Program:{
-			    AST::Program* num = dynamic_cast<AST::Program*>(&*astNode);
-
-		    	return evalProgram(num, env);
-			} break;
-			case AST::NodeType::Identifier:{
-				AST::IdentifierLiteral* num = dynamic_cast<AST::IdentifierLiteral*>(&*astNode);
-
-		    	return evalIdentifier(num, env);
-			}
-
-			default:{
-				std::cout << "This AST node is not yet set up" << std::endl;
-				exit(1);
-			} break;
-				
-		}*/
 	}
 }

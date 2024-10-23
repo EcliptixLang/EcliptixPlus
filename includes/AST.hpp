@@ -84,10 +84,10 @@ namespace AST {
     };
 
     class CallExpr : public ExprAST {
+    public:
       std::unique_ptr<ExprAST> Callee;
       std::vector<std::unique_ptr<ExprAST>> Args;
 
-    public:
       CallExpr(std::unique_ptr<ExprAST> &Callee,
                   std::vector<std::unique_ptr<ExprAST>> Args)
           : Callee(std::move(Callee)), Args(std::move(Args)) {}

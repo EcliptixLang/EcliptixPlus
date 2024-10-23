@@ -39,11 +39,14 @@ Token Parser::expectToken(Lexer::TokenType type){
 	  return tok;
 	}
 
-	throw "Unexpected token found while parsing";
+	throw std::runtime_error("Unexpected token found while parsing");
 }
 
 std::unique_ptr<AST::Program> Parser::produceAST(std::string& sourceCode){
   Tokens = Lexer::tokenize(sourceCode);
+  for(auto& token : Tokens){
+	std::cout << Lexer::StringifyTokenTypes(token.type) << "\n"; 
+  }
 	std::vector<std::unique_ptr<AST::ExprAST>> body{};
   
 	while(this->NotEOF()){
@@ -290,7 +293,7 @@ std::unique_ptr<AST::ExprAST> Parser::parseMemberCalls() {
 		return member;
 	}
 
-std::unique_ptr<AST::ExprAST>	 Parser::parseCalls(std::unique_ptr<AST::ExprAST> caller) {
+std::unique_ptr<AST::ExprAST> Parser::parseCalls(std::unique_ptr<AST::ExprAST> caller) {
 		AST::NumberExpr* expr = dynamic_cast<AST::NumberExpr*>(caller.get());
 
     if(expr){
@@ -298,14 +301,16 @@ std::unique_ptr<AST::ExprAST>	 Parser::parseCalls(std::unique_ptr<AST::ExprAST> 
   			this->ParsePrimary();
 		}
 
-		std::unique_ptr<AST::ExprAST> call = std::make_unique<AST::CallExpr>(AST::CallExpr(caller,this->parseArgs()));
+		std::vector<std::unique_ptr<AST::ExprAST>> args = this->parseArgs();
+		std::unique_ptr<AST::ExprAST> call = std::make_unique<AST::CallExpr>(AST::CallExpr(caller, std::move(args)));
+		
 		if(this->currentToken().type == Lexer::TokenType::OpenParen){
 			call = this->parseCalls(std::move(call));
 		}
 
 		return call;
 	}
-std::vector<std::unique_ptr<AST::ExprAST>>	Parser::parseArgs() {
+std::vector<std::unique_ptr<AST::ExprAST>> Parser::parseArgs() {
 		this->expectToken(Lexer::TokenType::OpenParen);
 		std::vector<std::unique_ptr<AST::ExprAST>> args{};
 		if(this->currentToken().type != Lexer::TokenType::CloseParen) args = this->parseArgsList();
@@ -316,10 +321,10 @@ std::vector<std::unique_ptr<AST::ExprAST>>	Parser::parseArgs() {
 
 std::vector<std::unique_ptr<AST::ExprAST>> Parser::parseArgsList() {
 		std::vector<std::unique_ptr<AST::ExprAST>> args{};
-    args.push_back(this->parseAssignment());
+    args.push_back(std::move(this->parseAssignment()));
 		while(this->currentToken().type == Lexer::TokenType::Comma){
 			this->nextToken();
-			args.push_back(this->parseAssignment());
+			args.push_back(std::move(this->parseAssignment()));
 		}
 
 		return args;
@@ -370,11 +375,11 @@ std::unique_ptr<AST::ExprAST> Parser::ParseAdditiveExpression(){
 	}
 
 std::unique_ptr<AST::ExprAST> Parser::ParseMultiplicativeExpression(){
-		std::unique_ptr<AST::ExprAST> left = this->ParsePrimary();
+		std::unique_ptr<AST::ExprAST> left = this->parseMemberCalls();
 		std::unique_ptr<AST::BinaryExpr> expr;
 		while(this->currentToken().value == "/" || this->currentToken().value == "*"){
 			std::string _operator = this->nextToken().value;
-			std::unique_ptr<AST::ExprAST> right = this->ParsePrimary();
+			std::unique_ptr<AST::ExprAST> right = this->parseMemberCalls();
 			
 			expr = std::make_unique<AST::BinaryExpr>(AST::BinaryExpr(_operator.c_str()[0], std::move(left), std::move(right)));
 			left = std::move(expr);
@@ -388,9 +393,13 @@ std::unique_ptr<AST::ExprAST> Parser::ParsePrimary() {
 
         switch (token.type) {
             case Lexer::TokenType::Identifier:
-                return std::make_unique<AST::Identifier>(AST::Identifier(this->nextToken().value));
+                this->nextToken();
+				return std::make_unique<AST::Identifier>(AST::Identifier(token.value));
             case Lexer::TokenType::Number:
-                return std::make_unique<AST::NumberExpr>(AST::NumberExpr(std::stod(this->nextToken().value)));
+				this->nextToken();
+				std::cout << "CurrentV: " << token.value <<"\nNextV: " << this->currentToken().value << "\n";
+
+                return std::make_unique<AST::NumberExpr>(AST::NumberExpr(std::stod(token.value)));
 			case Lexer::TokenType::OpenParen:{
 				this->nextToken();
 				std::unique_ptr<AST::ExprAST> value = this->ParseExpression();
@@ -400,8 +409,11 @@ std::unique_ptr<AST::ExprAST> Parser::ParsePrimary() {
 			case Lexer::TokenType::Null:
 				this->nextToken();
 				return nullptr;
+			case Lexer::TokenType::NL:
+				this->nextToken();
+				return ParseStatement();
             default:
-                std::cout << "Unexpected token found during parsing" << this->currentToken().value << std::endl;
+                std::cout << "Unexpected token found during parsing\n- Value: " << this->currentToken().value << "\n- Type: " << Lexer::StringifyTokenTypes(this->currentToken().type) << "\n";
                 exit(1);
         }
 }
