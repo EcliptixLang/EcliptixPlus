@@ -1,0 +1,30 @@
+console.out("Welcome to Ecliptix!")
+set money: number = 0
+lock thing: shell = $"ls"
+console.out(thing)
+
+while(true){
+	$'clear'
+
+	console.out("Currently, you have", yellow(money))
+
+	console.out("[1] Work")
+	console.out("[2] Shop")
+	console.out("[3] Exit")
+
+	lock thing: string = console.ask("> ")
+	
+	if(thing == "1"){
+		lock random: number = randomNumber(0, 100)
+		money = money + random
+		console.out("You worked hard and gained", yellow(random))
+		wait(3)
+	} else if(thing == "2"){
+		console.out("This has not been implemented yet")
+		wait(3)
+	} else if(thing == "3"){
+		process.quit(0)
+	}
+}
+
+// if this runs, then the interpreter is ready to get published

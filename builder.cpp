@@ -13,17 +13,19 @@ int main(int argc, char* argv[]){
         "g++ -c src/winutils.cpp -o lib/winutils.o -I./includes",
     	"g++ -c src/Utilities.cpp -o lib/Utilities.o -I./includes",
     	"g++ -c src/Parser.cpp -o lib/Parser.o -I./includes",
+        "g++ -c src/Values.cpp -o lib/Values.o -I./includes",
 	    "g++ -c src/Lexer.cpp -o lib/Lexer.o -I./includes",
     	"g++ -c src/Interpreter.cpp -o lib/Interpreter.o -I./includes",
 	    "g++ -c src/ENV.cpp -o lib/ENV.o -I./includes",
-    	"ar rcs lib/libecx.a lib/ENV.o lib/Interpreter.o lib/Lexer.o lib/Parser.o lib/Utilities.o lib/winutils.o",
+        "g++ -c src/AST.cpp -o lib/AST.o -I./includes",
+    	"ar rcs lib/libecx.a lib/ENV.o lib/Values.o lib/AST.o lib/Interpreter.o lib/Lexer.o lib/Parser.o lib/Utilities.o lib/winutils.o",
 	    "rm -rf lib/*.o" 
     };
     std::vector<std::string> dll{
-        "g++ dll.cpp -shared -o std.dll -L./lib -lecx -I./includes -DBUILDING_DLL -m64"
+        "g++ dll.cpp -shared -o std.dll -L./lib -lecx -I./includes -DBUILDING_DLL"
     };
     std::vector<std::string> exec{
-        "g++ src/** -o idk.exe -L. -I./includes -DBUILDING_DLL -m64"
+        "g++ src/** -o idk.exe -L. -I./includes -std=c++17 -fno-elide-constructors"
     };
 
     if(argv[1] == "dll"){

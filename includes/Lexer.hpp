@@ -46,7 +46,6 @@ namespace Lexer {
 		Give,
 		Using,
 		When,
-		Null,
 		_EOF,
     };
 

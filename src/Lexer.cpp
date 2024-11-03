@@ -7,7 +7,6 @@ namespace Lexer {
         KeywordList keywords;
         keywords["set"] = TokenType::Set;
         keywords["lock"] = TokenType::Lock;
-		keywords["null"] = TokenType::Null;
 		keywords["fun"] = TokenType::Fun;
 		keywords["if"] = TokenType::If;
 		keywords["else"] = TokenType::Else;
@@ -51,7 +50,7 @@ namespace Lexer {
                 tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::CloseBracket));
             } else if (src[0] == '=') {
                 Utilities::shift(src);
-				if(src[1] == '='){
+				if(src[0] == '='){
 					Utilities::shift(src);
 					tokens.push_back(token("==", TokenType::DoubleEquals));
 				} else
@@ -77,15 +76,37 @@ namespace Lexer {
 				while(src.size() > 0 && src[0] != odk){
 					str += Utilities::shift(src);
 				}
+                Utilities::shift(src);
 
                 tokens.push_back(token(str, TokenType::String));
-            } else if (src[0] == '*' || src[0] == '+' || src[0] == '-' || src[0] == '/' && src[1] != '/') {
-                std::string idk = "";
-                idk += Utilities::shift(src);
-                tokens.push_back(token(idk, TokenType::BinaryOperator));
-            } else if(src[0] == '\n'){
-                Utilities::shift(src);
-                tokens.push_back(token("\n", TokenType::NL));
+            } else if (src[0] == '*' || src[0] == '+' || src[0] == '-' || src[0] == '/') {
+                if (src[1] == '/' || src[1] == '*') {
+                    char commentType = src[1];
+                    Utilities::shift(src);
+                    Utilities::shift(src);
+
+                    if (commentType == '/'){
+                        while (!src.empty() && src[0] != '\n') {
+                            Utilities::shift(src);
+                        }
+                    }
+
+                    if (commentType == '*'){
+                        Utilities::shift(src);
+                        while (!src.empty()) {
+                            if (src[0] == '*' && src.size() > 1 && src[1] == '/') {
+                                Utilities::shift(src);
+                                Utilities::shift(src);
+                                break;
+                            }
+                            Utilities::shift(src);
+                        }
+                    }
+                } else {
+                    std::string idk = "";
+                    idk += Utilities::shift(src);
+                    tokens.push_back(token(idk, TokenType::BinaryOperator));
+                }
             } else {
                 if (isalpha(src[0])) {
                     std::string idk = "";
@@ -119,47 +140,45 @@ namespace Lexer {
 
     std::string StringifyTokenTypes(TokenType type) {
         switch (type) {
-            case TokenType::BinaryOperator: return "TokenType::BinaryOperator";
-            case TokenType::CloseParen: return "TokenType::CloseParen";
-            case TokenType::OpenParen: return "TokenType::OpenParen";
-            case TokenType::Equals: return "TokenType::Equals";
-            case TokenType::Identifier: return "TokenType::Identifier";
-            case TokenType::Number: return "TokenType::Number";
-            case TokenType::String: return "TokenType::String";
-            case TokenType::Lock: return "TokenType::Lock";
-			case TokenType::Null: return "TokenType::Null";
-            case TokenType::Set: return "TokenType::Set";
-			case TokenType::Async: return "TokenType::Async";
-			case TokenType::BinaryEquals: return "TokenType::BinaryEquals";
-			case TokenType::Break: return "TokenType::Break";
-			case TokenType::CloseBrace: return "TokenType::CloseBrace";
-			case TokenType::CloseBracket: return "TokenType::CloseBracket";
-			case TokenType::Colon: return "TokenType::Colon";
-			case TokenType::Comma: return "TokenType::Comma";
-			case TokenType::DollarSign: return "TokenType::DollarSign";
-			case TokenType::Dot: return "TokenType::Dot";
-			case TokenType::DoubleEquals: return "TokenType::DoubleEquals";
-			case TokenType::Else: return "TokenType::Else";
-			case TokenType::For: return "TokenType::For";
-			case TokenType::From: return "TokenType::From";
-			case TokenType::Fun: return "TokenType::Fun";
-			case TokenType::Give: return "TokenType::Give";
+            case TokenType::BinaryOperator:  return "TokenType::BinaryOperator";
+            case TokenType::CloseParen:      return "TokenType::CloseParen";
+            case TokenType::OpenParen:       return "TokenType::OpenParen";
+            case TokenType::Equals:          return "TokenType::Equals";
+            case TokenType::Identifier:      return "TokenType::Identifier";
+            case TokenType::Number:          return "TokenType::Number";
+            case TokenType::String:          return "TokenType::String";
+            case TokenType::Lock:            return "TokenType::Lock";
+            case TokenType::Set:             return "TokenType::Set";
+			case TokenType::Async:           return "TokenType::Async";
+			case TokenType::BinaryEquals:    return "TokenType::BinaryEquals";
+			case TokenType::Break:           return "TokenType::Break";
+			case TokenType::CloseBrace:      return "TokenType::CloseBrace";
+			case TokenType::CloseBracket:    return "TokenType::CloseBracket";
+			case TokenType::Colon:           return "TokenType::Colon";
+			case TokenType::Comma:           return "TokenType::Comma";
+			case TokenType::DollarSign:      return "TokenType::DollarSign";
+			case TokenType::Dot:             return "TokenType::Dot";
+			case TokenType::DoubleEquals:    return "TokenType::DoubleEquals";
+			case TokenType::Else:            return "TokenType::Else";
+			case TokenType::For:             return "TokenType::For";
+			case TokenType::From:            return "TokenType::From";
+			case TokenType::Fun:             return "TokenType::Fun";
+			case TokenType::Give:            return "TokenType::Give";
 			case TokenType::GreaterThanSign: return "TokenType::GreaterThanSign";
-			case TokenType::If: return "TokenType::If";
-			case TokenType::NotEquals: return "TokenType::NotEquals";
-			case TokenType::OpenBrace: return "TokenType::OpenBrace";
-			case TokenType::OpenBracket: return "TokenType::OpenBracket";
-			case TokenType::Return: return "TokenType::Return";
-			case TokenType::Semicolon: return "TokenType::Semicolon";
-			case TokenType::Slash: return "TokenType::Slash";
-			case TokenType::Take: return "TokenType::Take";
-			case TokenType::Using: return "TokenType::Using";
-			case TokenType::When: return "TokenType::When";
-			case TokenType::While: return "TokenType::While";
-            case TokenType::NL: return "TokenType::NL";
-			case TokenType::_EOF: return "TokenType::_EOF";
+			case TokenType::If:              return "TokenType::If";
+			case TokenType::NotEquals:       return "TokenType::NotEquals";
+			case TokenType::OpenBrace:       return "TokenType::OpenBrace";
+			case TokenType::OpenBracket:     return "TokenType::OpenBracket";
+			case TokenType::Return:          return "TokenType::Return";
+			case TokenType::Semicolon:       return "TokenType::Semicolon";
+			case TokenType::Slash:           return "TokenType::Slash";
+			case TokenType::Take:            return "TokenType::Take";
+			case TokenType::Using:           return "TokenType::Using";
+			case TokenType::When:            return "TokenType::When";
+			case TokenType::While:           return "TokenType::While";
+			case TokenType::_EOF:            return "TokenType::_EOF";
 
-            default: return "unknown";
+            default:                         return "unknown";
         }
     }
 }

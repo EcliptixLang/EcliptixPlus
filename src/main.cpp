@@ -5,25 +5,20 @@
 #include <winutils.hpp>
 #include <Utilities.hpp>
 
-void runFile(std::string filePath){
-	Parser parser;
-	Environment ParentENV;
+Parser parser;
+Environment ParentENV;
+
+int runFile(std::string filePath){
 	std::string code = Utilities::readFile(filePath);
 
 	std::unique_ptr<AST::ExprAST> ast = parser.produceAST(code);
-    AST::Program* program = dynamic_cast<AST::Program*>(ast.get());
 
-	if(program){
-		Interpreter::evaluate(std::move(ast), std::move(ParentENV));
-	} else {
-		return;
-	}
+	Interpreter::evaluate(ast, ParentENV);
+	
+	return 0;
 }
 
-void runREPL(){
-	Parser parser;
-	Environment ParentENV;
-
+int runREPL(){
 	while(true){
 		std::cout << "> ";
 		std::string code;
@@ -35,18 +30,18 @@ void runREPL(){
 	    AST::Program* program = dynamic_cast<AST::Program*>(ast.get());
 
 		if(program){
-			Interpreter::evaluate(std::move(ast), std::move(ParentENV));
+			Interpreter::evaluate(ast, ParentENV);
 		} else {
 			std::cout << "can't evaluate that!\n";
 		}
 	}
+
+	return 0;
 }
 
 int main(int argc, char* argv[]) {
 	if(argc > 1)
-		runFile(argv[1]);
+		return runFile(argv[1]);
 	else
-		runREPL();
-
-    return 0;
+		return runREPL();
 }

@@ -8,7 +8,7 @@
 
 class Environment {
     public:
-        explicit Environment(std::unique_ptr<Environment> parentENV = nullptr);
+        explicit Environment();
 
         std::unique_ptr<Values::Runtime> declareVar(const std::string& varname, std::unique_ptr<Values::Runtime> value, bool constant);
 
@@ -17,11 +17,10 @@ class Environment {
         std::unique_ptr<Values::Runtime> lookupVar(const std::string& varname);
         std::vector<std::string> constants;
         std::unordered_map<std::string, std::unique_ptr<Values::Runtime>> variables;
-
-    private:
+        std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Values::Runtime>>> prototypes;
         Environment* resolve(const std::string& varname);
-
-        std::unique_ptr<Environment> parent;
+        Environment* parent;
+        void setParent(Environment& env);
 };
 
 typedef void(*create)(Environment&);

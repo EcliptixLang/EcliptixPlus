@@ -1,14 +1,9 @@
 #pragma once
-#ifdef BUILDING_DLL
-#define DLL_API __declspec(dllexport)
-#else
-#define DLL_API __declspec(dllimport)
-#endif
 
 #include <Values.hpp>
 #include <ENV.hpp>
 
-class DLL_API NativeFN : public Values::Runtime {
+class NativeFN : public Values::Runtime {
 	public:
 		std::unique_ptr<Values::Runtime>(*call)(std::vector<std::unique_ptr<Values::Runtime>>, Environment&);
         
@@ -17,4 +12,23 @@ class DLL_API NativeFN : public Values::Runtime {
 		std::string type() const override {
 			return "native-fn";
 		}
-	};
+
+		std::string stringValue() const override {
+			return "null";
+		}
+};
+
+class ProtoFN : public Values::Runtime {
+	public:
+		std::unique_ptr<Values::Runtime>(*call)(std::vector<std::unique_ptr<Values::Runtime>>, Environment&, std::unique_ptr<Values::Runtime>&);
+        
+		ProtoFN(std::unique_ptr<Values::Runtime>(*call)(std::vector<std::unique_ptr<Values::Runtime>>, Environment&, std::unique_ptr<Values::Runtime>&)) : call(std::move(call)) {}
+
+		std::string type() const override {
+			return "proto-fn";
+		}
+
+		std::string stringValue() const override {
+			return "null";
+		}
+};

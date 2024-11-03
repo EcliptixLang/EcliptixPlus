@@ -2,25 +2,57 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <unordered_map>
 #include <optional>
 #include <map>
 #include <Lexer.hpp>
 
 namespace AST {
 
-    class ExprAST {
+  enum class Nodes {
+  	Number,
+  	Program,
+    String,
+    Identifier,
+    Variable,
+    Assignment,
+    Binary,
+    Call,
+    When,
+    While,
+    If,
+    Function,
+    Array,
+    ShellCmd,
+    Element, 
+    Object, 
+    Member, 
+    Equality,
+    Return
+  };
+
+  std::string stringifyAST(Nodes type);
+
+  class ExprAST {
     public:
       virtual ~ExprAST() = default;
-      virtual std::string getType() const = 0;
-    };
+      virtual Nodes getType() const = 0;
+  };
 
-    class NumberExpr : public ExprAST {
+  class NumberExpr : public ExprAST {
     public:
       double Value;
       NumberExpr(double Value) : Value(Value) {}
-      std::string getType() const override {
-        return "Number";
+      Nodes getType() const override {
+        return Nodes::Number;
+      }
+  };
+
+    class StringExpr : public ExprAST {
+    public:
+      std::string Value;
+      StringExpr(std::string Value) : Value(Value) {}
+      Nodes getType() const override {
+        return Nodes::String;
       }
     };
 
@@ -29,8 +61,8 @@ namespace AST {
       std::vector<std::unique_ptr<AST::ExprAST>> body;
       Program(std::vector<std::unique_ptr<AST::ExprAST>> body) : body(std::move(body)) {}
 
-      std::string getType() const override {
-        return "Program";
+      Nodes getType() const override {
+        return Nodes::Program;
       }
     };
 
@@ -40,8 +72,8 @@ namespace AST {
 
         Identifier(std::string name) : name(name) {}
 
-        std::string getType() const override {
-          return "Identifier";
+        Nodes getType() const override {
+          return Nodes::Identifier;
         }
     };
 
@@ -54,8 +86,8 @@ namespace AST {
       VariableExpr(const std::string &Name, const std::string &Type, std::unique_ptr<ExprAST> Value, bool constant)
        : Name(Name), Type(Type), Value(std::move(Value)), constant(constant) {}
       
-      std::string getType() const override {
-        return "VarExpr";
+      Nodes getType() const override {
+        return Nodes::Variable;
       }
     };
 
@@ -66,8 +98,8 @@ namespace AST {
 
         AssignmentExpr(std::unique_ptr<AST::ExprAST> assignee, std::unique_ptr<AST::ExprAST> value) : assignee(std::move(assignee)), value(std::move(value)) {}
 
-        std::string getType() const override {
-          return "AssignmentExpr";
+        Nodes getType() const override {
+          return Nodes::Assignment;
         }
     };
 
@@ -78,8 +110,8 @@ namespace AST {
       BinaryExpr(char Op, std::unique_ptr<ExprAST> LHS,
                     std::unique_ptr<ExprAST> RHS)
           : Op(Op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
-      std::string getType() const override {
-        return "BinExpr";
+      Nodes getType() const override {
+        return Nodes::Binary;
       }
     };
 
@@ -91,8 +123,8 @@ namespace AST {
       CallExpr(std::unique_ptr<ExprAST> &Callee,
                   std::vector<std::unique_ptr<ExprAST>> Args)
           : Callee(std::move(Callee)), Args(std::move(Args)) {}
-      std::string getType() const override {
-        return "CallExpr";
+      Nodes getType() const override {
+        return Nodes::Call;
       }
     };
 
@@ -104,8 +136,8 @@ namespace AST {
 
         WhenDeclaration(std::unique_ptr<ExprAST> conditional, Lexer::TokenType operatorType, std::vector<std::unique_ptr<ExprAST>> consequent)
             : conditional(std::move(conditional)), operatorType(operatorType), consequent(std::move(consequent)) {}
-        std::string getType() const override {
-          return "WhenDeclaration";
+        Nodes getType() const override {
+          return Nodes::When;
         }
     };
 
@@ -117,8 +149,8 @@ namespace AST {
 
         WhileDeclaration(std::unique_ptr<ExprAST> conditional, Lexer::TokenType operatorType, std::vector<std::unique_ptr<ExprAST>> consequent)
             : conditional(std::move(conditional)), operatorType(operatorType), consequent(std::move(consequent)) {}
-        std::string getType() const override {
-          return "WhileDeclaration";
+        Nodes getType() const override {
+          return Nodes::While;
         }
     };
 
@@ -131,8 +163,8 @@ namespace AST {
 
         IfStatement(std::unique_ptr<ExprAST> conditional, Lexer::TokenType operatorType, std::vector<std::unique_ptr<ExprAST>> consequent, std::vector<std::unique_ptr<ExprAST>> alternate)
             : conditional(std::move(conditional)), operatorType(operatorType), consequent(std::move(consequent)), alternate(std::move(alternate)) {}
-        std::string getType() const override {
-          return "IfStatement";
+        Nodes getType() const override {
+          return Nodes::If;
         }
     };
 
@@ -140,12 +172,13 @@ namespace AST {
       public:
         std::vector<std::string> params;
         std::string name;
+        std::string type;
         std::vector<std::unique_ptr<AST::ExprAST>> body;
 
-        Function(std::vector<std::string> params, std::string name, std::vector<std::unique_ptr<AST::ExprAST>> body)
-            : params(params), name(name), body(std::move(body)) {}
-        std::string getType() const override {
-          return "Function";
+        Function(std::vector<std::string> params, std::string name, std::vector<std::unique_ptr<AST::ExprAST>> body, std::string type)
+            : params(params), name(name), body(std::move(body)), type(type) {}
+        Nodes getType() const override {
+          return Nodes::Function;
         }
     };
 
@@ -155,8 +188,8 @@ namespace AST {
 
         Array(std::vector<std::unique_ptr<ExprAST>> elements) : elements(std::move(elements)) {}
 
-        std::string getType() const override {
-          return "Array";
+        Nodes getType() const override {
+          return Nodes::Array;
         }
     };
 
@@ -166,8 +199,8 @@ namespace AST {
 
         ShellCMD(std::string cmd) : cmd(cmd) {}
 
-        std::string getType() const override {
-          return "ShellCMD";
+        Nodes getType() const override {
+          return Nodes::ShellCmd;
         }
     };
 
@@ -178,8 +211,8 @@ namespace AST {
 
         Element(std::string key, std::unique_ptr<AST::ExprAST> value) : key(key), value(std::move(value)) {}
 
-        std::string getType() const override {
-          return "Element";
+        Nodes getType() const override {
+          return Nodes::Element;
         }
     };
 
@@ -189,8 +222,8 @@ namespace AST {
 
         Object(std::vector<std::unique_ptr<AST::ExprAST>> map) : map(std::move(map)) {}
 
-        std::string getType() const override {
-          return "Object";
+        Nodes getType() const override {
+          return Nodes::Object;
         }
     };
 
@@ -202,8 +235,32 @@ namespace AST {
 
         MemberExpr(std::unique_ptr<AST::ExprAST> object, std::unique_ptr<AST::ExprAST> property, bool computed) : object(std::move(object)), property(std::move(property)), computed(computed) {}
 
-        std::string getType() const override {
-          return "MemberExpr";
+        Nodes getType() const override {
+          return Nodes::Member;
+        }
+    };
+
+    class ReturnExpr : public ExprAST {
+      public:
+        std::unique_ptr<AST::ExprAST> value;
+
+        ReturnExpr(std::unique_ptr<AST::ExprAST> value) : value(std::move(value)) {}
+
+        Nodes getType() const override {
+          return Nodes::Return;
+        }
+    };
+
+    class EquExpr : public ExprAST {
+      public:
+        std::unique_ptr<AST::ExprAST> left;
+        std::unique_ptr<AST::ExprAST> right;
+        Lexer::TokenType oper;
+
+        EquExpr(std::unique_ptr<AST::ExprAST> left, std::unique_ptr<AST::ExprAST> right, Lexer::TokenType oper) : left(std::move(left)), right(std::move(right)), oper(oper) {}
+
+        Nodes getType() const override {
+          return Nodes::Equality;
         }
     };
 }

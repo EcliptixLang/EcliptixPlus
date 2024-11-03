@@ -1,0 +1,10 @@
+fun:int main(){
+    console.out("LMAo")
+
+    if(1 != 2)
+        error.throw("dumb")
+
+    return 0
+}
+
+main()

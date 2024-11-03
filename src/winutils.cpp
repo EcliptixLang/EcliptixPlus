@@ -17,7 +17,8 @@ std::string GetExecutableDirectory() {
     return (std::string::npos == pos) ? "" : path.substr(0, pos);
 }
 Environment IncludeLIB(std::string lib, Environment &env){
-    Environment enve(std::move(env));
+    Environment enve;
+    enve.setParent(env);
     HMODULE hModule = LoadLibraryA(lib.c_str());
     if (!hModule) {
         DWORD errorMessageID = ::GetLastError();
@@ -59,7 +60,6 @@ std::vector<std::string> getDLLs(){
     
     for (const auto& entry : std::filesystem::directory_iterator(exeDir)) {
         if (entry.path().extension() == ".dll") {
-            //dlls.push_back(entry.path().filename().string());
             dlls.push_back(exeDir.append("\\").append(entry.path().filename().string()));
         }
     }

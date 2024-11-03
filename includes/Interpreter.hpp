@@ -5,5 +5,5 @@
 #include <memory>
 
 namespace Interpreter {
-    std::unique_ptr<Values::Runtime> evaluate(std::unique_ptr<AST::ExprAST> astNode, Environment env);
+    std::unique_ptr<Values::Runtime> evaluate(std::unique_ptr<AST::ExprAST>& astNode, Environment& env);
 }
