@@ -34,6 +34,7 @@ namespace Lexer {
 		Lock,
 		Fun,
 		If,
+		Skip,
 		Else,
 		While,
 		For,

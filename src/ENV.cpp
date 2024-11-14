@@ -3,127 +3,71 @@
 #include <iostream>
 #include <windows.h>
 #include <winutils.hpp>
+#include <Utilities.hpp>
 
-std::unique_ptr<Values::Runtime> thing(std::vector<std::unique_ptr<Values::Runtime>> args, Environment& env){
-    std::string value = "";
-    
-    for(auto& arg : args){
-        value.append(" ").append(arg.get()->stringValue());
-    }
-
-    if(value[0] == ' '){
-        value.erase(0, 1);
-    }
-
-    std::cout << value << "\n";
-    
-    return std::make_unique<Values::String>(Values::String(value));
+Environment* Environment::getParent(){
+    return parent;
 }
 
-std::unique_ptr<Values::Runtime> ask(std::vector<std::unique_ptr<Values::Runtime>> args, Environment& env){
-    std::string value = "";
-    
-    for(auto& arg : args){
-        value.append(" ").append(arg.get()->stringValue());
-    }
-
-    if(value[0] == ' '){
-        value.erase(0, 1);
-    }
-
-    std::cout << value;
-    std::string ans;
-    std::cin >> ans;
-    return std::make_unique<Values::String>(Values::String(ans));
+int Environment::variableCount(){
+    return variables.size();
 }
 
-std::unique_ptr<Values::Runtime> _throw(std::vector<std::unique_ptr<Values::Runtime>> args, Environment& env){
-    std::cout << "Error:\n- Code: 8\n- Description: ";
-    thing(std::move(args), env);
-    exit(8);
-
-    return std::make_unique<Values::Null>(Values::Null());
+void Environment::setParent(Environment* Parent){
+    parent = Parent;
 }
 
-Environment::Environment() {
-            std::map<std::string, std::unique_ptr<Values::Runtime>> stringPrototypes;
-            stringPrototypes["throw"] = std::make_unique<NativeFN>(NativeFN(_throw));
-            variables["error"] = std::make_unique<Values::Object>(Values::Object(stringPrototypes));
+Variable Environment::getVariable(const std::string& varname){
+    for(auto& var: variables){
+        if(var.name == varname)
+            return std::move(var);
+    }
 
-            std::map<std::string, std::unique_ptr<Values::Runtime>> ConsoleStuff;
-            ConsoleStuff["out"] = std::make_unique<NativeFN>(NativeFN(thing));
-            ConsoleStuff["ask"] = std::make_unique<NativeFN>(NativeFN(ask));
-            variables["console"] = std::make_unique<Values::Object>(Values::Object(ConsoleStuff));
+    if(!parent){
+        std::cout << "Variable " << varname << " undefined, parent count: " << parentCount() << "\n";
+        exit(1);
+    }
 
-            variables["null"] = std::make_unique<Values::Null>(Values::Null());
-            std::vector<std::string> dlls = getDLLs();
-        
-        	for(auto& dll : dlls){
-                HMODULE hModule = LoadLibraryA(dll.c_str());
-                if (!hModule) {
-                    DWORD errorMessageID = ::GetLastError();
-                    std::cerr << "Could not load the \"" << dll << "\" Library.\n" << errorMessageID << std::endl;
-                }
+    return parent->getVariable(varname);
+}
 
-                typedef Environment (*CreateLibFn)();
-    
-                CreateLibFn createLibFunction = (CreateLibFn)GetProcAddress(hModule, "createLib");
+int Environment::parentCount(int num){
+    num++;
+    if(!parent)
+        return num;
 
-                if (!createLibFunction) {
-                    std::cerr << "Could not locate the \"createLib\" function for loading." << std::endl;
-                    FreeLibrary(hModule);
-                }
+    return parent->parentCount(num);
+}
 
-                Environment eenv = createLibFunction();
-
-                for(auto& var : eenv.variables){
-                    if(!variables[var.first]){
-                        variables[var.first] = std::move(var.second);
-                        constants.push_back(var.first);
-                    }
-                }
-        	}
+void Environment::setVariable(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, bool constant){
+    for (auto& var : variables) {
+        if (var.name == varname) {
+            if (var.constant) {
+                std::cout << "Cannot modify a constant variable.\n";
+                return;
+            }
+            var.value = std::move(vallo);
+            return;
         }
-
-std::unique_ptr<Values::Runtime> Environment::declareVar(const std::string& varname, std::unique_ptr<Values::Runtime> value, bool constant) {
-    if (variables.find(varname) != variables.end()) {
-        throw std::runtime_error("Cannot declare variable " + varname + ". It is already defined.");
     }
-    variables[varname] = std::move(value);
-    constants.push_back(varname);
-    return value;
+    variables.push_back({ varname, std::move(vallo), constant });
 }
 
-std::unique_ptr<Values::Runtime> Environment::assignVar(const std::string& varname, std::unique_ptr<Values::Runtime> value) {
-    Environment* env = resolve(varname);
-    env->variables[varname] = std::move(value);
-    return value;
-}
-
-std::unique_ptr<Values::Runtime> Environment::lookupVar(const std::string& varname) {
-    Environment* env = resolve(varname);
-    auto it = env->variables.find(varname);
-    if (it != env->variables.end()) {
-        return std::move(it->second);
+void Environment::setVariableSafe(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, bool constant){
+    for (auto& var : variables) {
+        if (var.name == varname) {
+            if (var.constant) {
+                return;
+            }
+            var.value = std::move(vallo);
+            return;
+        }
     }
-    throw std::runtime_error("Variable " + varname + " not found.");
+    variables.push_back({ varname, std::move(vallo), constant });
 }
 
-Environment* Environment::resolve(const std::string& varname) {
-    // Check if the variable exists in the current environment
-    if (variables.find(varname) != variables.end()) {
-        return this; // Return a pointer to the current environment
-    }
-
-    // If there's no parent, the variable doesn't exist
-    if (!parent) {
-        throw std::runtime_error("Cannot resolve '" + varname + "' as it does not exist.");
-    }
-
-    // Otherwise, continue to resolve in the parent environment
-    return parent->resolve(varname);
-}
-
-void Environment::setParent(Environment& env) {
-    parent = &env;
-}
+/*
+void Environment::Initialize(){
+    
+    constants.push_back("false");
+}*/

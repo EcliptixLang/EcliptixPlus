@@ -16,6 +16,10 @@ class NativeFN : public Values::Runtime {
 		std::string stringValue() const override {
 			return "null";
 		}
+
+		std::unique_ptr<Values::Runtime> clone() const override {
+          return std::make_unique<NativeFN>(NativeFN(call));
+        }
 };
 
 class ProtoFN : public Values::Runtime {

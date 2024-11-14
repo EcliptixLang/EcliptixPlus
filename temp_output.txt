@@ -1,0 +1,16 @@
+a.ecx
+build
+build.ex
+build.exe
+builder.cpp
+dll.cpp
+ecliptix-0.0.4.vsix
+goal.ecx
+hi.txt
+idk.exe
+includes
+lib
+libecx.a
+proj.yml
+src
+temp_output.txt

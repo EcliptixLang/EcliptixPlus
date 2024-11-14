@@ -14,6 +14,7 @@ namespace AST {
     String,
     Identifier,
     Variable,
+    Skip,
     Assignment,
     Binary,
     Call,
@@ -27,6 +28,7 @@ namespace AST {
     Object, 
     Member, 
     Equality,
+    Break,
     Return
   };
 
@@ -36,6 +38,7 @@ namespace AST {
     public:
       virtual ~ExprAST() = default;
       virtual Nodes getType() const = 0;
+      virtual std::unique_ptr<ExprAST> clone() const = 0;
   };
 
   class NumberExpr : public ExprAST {
@@ -45,6 +48,10 @@ namespace AST {
       Nodes getType() const override {
         return Nodes::Number;
       }
+
+      std::unique_ptr<ExprAST> clone() const override {
+        return std::make_unique<NumberExpr>(NumberExpr(Value));
+      }
   };
 
     class StringExpr : public ExprAST {
@@ -53,6 +60,9 @@ namespace AST {
       StringExpr(std::string Value) : Value(Value) {}
       Nodes getType() const override {
         return Nodes::String;
+      }
+      std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<StringExpr>(StringExpr(Value));
       }
     };
 
@@ -64,6 +74,14 @@ namespace AST {
       Nodes getType() const override {
         return Nodes::Program;
       }
+
+      std::unique_ptr<ExprAST> clone() const override {
+          std::vector<std::unique_ptr<ExprAST>> clonedbody;
+          for(auto& thing : body){
+            clonedbody.push_back(thing.get()->clone());
+          }
+          return std::make_unique<Program>(Program(std::move(clonedbody)));
+      }
     };
 
     class Identifier : public ExprAST {
@@ -74,6 +92,10 @@ namespace AST {
 
         Nodes getType() const override {
           return Nodes::Identifier;
+        }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<Identifier>(Identifier(name));
         }
     };
 
@@ -89,6 +111,10 @@ namespace AST {
       Nodes getType() const override {
         return Nodes::Variable;
       }
+
+      std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<VariableExpr>(VariableExpr(Name, Type, Value.get()->clone(), constant));
+        }
     };
 
     class AssignmentExpr : public ExprAST {
@@ -100,6 +126,10 @@ namespace AST {
 
         Nodes getType() const override {
           return Nodes::Assignment;
+        }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<AssignmentExpr>(AssignmentExpr(assignee.get()->clone(), value.get()->clone()));
         }
     };
 
@@ -113,6 +143,10 @@ namespace AST {
       Nodes getType() const override {
         return Nodes::Binary;
       }
+
+      std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<BinaryExpr>(BinaryExpr(Op, LHS.get()->clone(), RHS.get()->clone()));
+        }
     };
 
     class CallExpr : public ExprAST {
@@ -120,12 +154,20 @@ namespace AST {
       std::unique_ptr<ExprAST> Callee;
       std::vector<std::unique_ptr<ExprAST>> Args;
 
-      CallExpr(std::unique_ptr<ExprAST> &Callee,
+      CallExpr(std::unique_ptr<ExprAST> Callee,
                   std::vector<std::unique_ptr<ExprAST>> Args)
           : Callee(std::move(Callee)), Args(std::move(Args)) {}
       Nodes getType() const override {
         return Nodes::Call;
       }
+
+      std::unique_ptr<ExprAST> clone() const override {
+          std::vector<std::unique_ptr<ExprAST>> clonedbody;
+          for(auto& thing : Args){
+            clonedbody.push_back(thing.get()->clone());
+          }
+          return std::make_unique<CallExpr>(CallExpr(Callee.get()->clone(), std::move(clonedbody)));
+        }
     };
 
     class WhenDeclaration : public ExprAST {
@@ -139,6 +181,14 @@ namespace AST {
         Nodes getType() const override {
           return Nodes::When;
         }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          std::vector<std::unique_ptr<ExprAST>> clonedbody;
+          for(auto& thing : consequent){
+            clonedbody.push_back(thing.get()->clone());
+          }
+          return std::make_unique<WhenDeclaration>(WhenDeclaration(conditional.get()->clone(), operatorType, std::move(clonedbody)));
+        }
     };
 
     class WhileDeclaration : public ExprAST {
@@ -151,6 +201,14 @@ namespace AST {
             : conditional(std::move(conditional)), operatorType(operatorType), consequent(std::move(consequent)) {}
         Nodes getType() const override {
           return Nodes::While;
+        }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          std::vector<std::unique_ptr<ExprAST>> clonedbody;
+          for(auto& thing : consequent){
+            clonedbody.push_back(thing.get()->clone());
+          }
+          return std::make_unique<WhileDeclaration>(WhileDeclaration(conditional.get()->clone(), operatorType, std::move(clonedbody)));
         }
     };
 
@@ -166,6 +224,18 @@ namespace AST {
         Nodes getType() const override {
           return Nodes::If;
         }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          std::vector<std::unique_ptr<ExprAST>> clonedbody;
+          for(auto& thing : consequent){
+            clonedbody.push_back(thing.get()->clone());
+          }
+          std::vector<std::unique_ptr<ExprAST>> clonedbody1;
+          for(auto& thing : alternate){
+            clonedbody1.push_back(thing.get()->clone());
+          }
+          return std::make_unique<IfStatement>(IfStatement(std::move(conditional.get()->clone()), operatorType, std::move(clonedbody), std::move(clonedbody1)));
+        }
     };
 
     class Function : public ExprAST {
@@ -180,6 +250,14 @@ namespace AST {
         Nodes getType() const override {
           return Nodes::Function;
         }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          std::vector<std::unique_ptr<ExprAST>> clonedbody;
+          for(auto& thing : body){
+            clonedbody.push_back(thing.get()->clone());
+          }
+          return std::make_unique<Function>(Function(params, name, std::move(clonedbody), type));
+        }
     };
 
     class Array : public ExprAST {
@@ -191,6 +269,14 @@ namespace AST {
         Nodes getType() const override {
           return Nodes::Array;
         }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          std::vector<std::unique_ptr<ExprAST>> clonedelm;
+          for(auto& thing : elements){
+            clonedelm.push_back(thing.get()->clone());
+          }
+          return std::make_unique<Array>(Array(std::move(clonedelm)));
+        }
     };
 
     class ShellCMD : public ExprAST {
@@ -201,6 +287,10 @@ namespace AST {
 
         Nodes getType() const override {
           return Nodes::ShellCmd;
+        }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<ShellCMD>(ShellCMD(cmd));
         }
     };
 
@@ -214,6 +304,10 @@ namespace AST {
         Nodes getType() const override {
           return Nodes::Element;
         }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<Element>(Element(key, value.get()->clone()));
+        }
     };
 
     class Object : public ExprAST {
@@ -224,6 +318,14 @@ namespace AST {
 
         Nodes getType() const override {
           return Nodes::Object;
+        }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          std::vector<std::unique_ptr<AST::ExprAST>> clonedmap;
+          for(auto& thing : map){
+            clonedmap.push_back(thing.get()->clone());
+          }
+          return std::make_unique<Object>(Object(std::move(clonedmap)));
         }
     };
 
@@ -238,6 +340,10 @@ namespace AST {
         Nodes getType() const override {
           return Nodes::Member;
         }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<MemberExpr>(MemberExpr(object.get()->clone(), property.get()->clone(), computed));
+        }
     };
 
     class ReturnExpr : public ExprAST {
@@ -248,6 +354,10 @@ namespace AST {
 
         Nodes getType() const override {
           return Nodes::Return;
+        }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<ReturnExpr>(ReturnExpr(value.get()->clone()));
         }
     };
 
@@ -261,6 +371,30 @@ namespace AST {
 
         Nodes getType() const override {
           return Nodes::Equality;
+        }
+
+        std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<EquExpr>(EquExpr(left.get()->clone(), right.get()->clone(), oper));
+        }
+    };
+
+    class Break : public ExprAST {
+      public:
+        Nodes getType() const override {
+          return Nodes::Break;
+        }
+        std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<Break>(Break());
+        }
+    };
+
+    class Skip : public ExprAST {
+      public:
+        Nodes getType() const override {
+          return Nodes::Skip;
+        }
+        std::unique_ptr<ExprAST> clone() const override {
+          return std::make_unique<Skip>(Skip());
         }
     };
 }

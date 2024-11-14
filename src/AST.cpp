@@ -21,6 +21,9 @@ namespace AST {
             case Nodes::Variable: return "variable";
             case Nodes::When: return "when";
             case Nodes::While: return "while";
+            case Nodes::Skip: return "skip";
+            case Nodes::Return: return "return";
+            case Nodes::Break: return "break";
             default: return "unknown";
         }
     }

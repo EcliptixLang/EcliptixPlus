@@ -19,6 +19,7 @@ namespace Lexer {
 		keywords["give"] = TokenType::Give;
 		keywords["using"] = TokenType::Using;
 		keywords["when"] = TokenType::When;
+        keywords["skip"] = TokenType::Skip;
         return keywords;
     }
 

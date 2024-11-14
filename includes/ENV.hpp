@@ -6,21 +6,24 @@
 #include <stdexcept>
 #include <Values.hpp>
 
+struct Variable {
+    std::string name;
+    std::unique_ptr<Values::Runtime> value;
+    bool constant;
+};
+
 class Environment {
     public:
-        explicit Environment();
-
-        std::unique_ptr<Values::Runtime> declareVar(const std::string& varname, std::unique_ptr<Values::Runtime> value, bool constant);
-
-        std::unique_ptr<Values::Runtime> assignVar(const std::string& varname, std::unique_ptr<Values::Runtime> value);
-
-        std::unique_ptr<Values::Runtime> lookupVar(const std::string& varname);
-        std::vector<std::string> constants;
-        std::unordered_map<std::string, std::unique_ptr<Values::Runtime>> variables;
-        std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Values::Runtime>>> prototypes;
-        Environment* resolve(const std::string& varname);
-        Environment* parent;
-        void setParent(Environment& env);
+        Environment* getParent();
+        int variableCount();
+        void setParent(Environment* Parent);
+        Variable getVariable(const std::string& varname);
+        int parentCount(int num = 0);
+        void setVariableSafe(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, bool constant = false);
+        void setVariable(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, bool constant = false);
+    private:
+    Environment* parent = nullptr;
+    std::vector<Variable> variables;
 };
 
 typedef void(*create)(Environment&);

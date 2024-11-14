@@ -17,8 +17,7 @@ std::string GetExecutableDirectory() {
     return (std::string::npos == pos) ? "" : path.substr(0, pos);
 }
 Environment IncludeLIB(std::string lib, Environment &env){
-    Environment enve;
-    enve.setParent(env);
+    Environment enve(std::move(env));
     HMODULE hModule = LoadLibraryA(lib.c_str());
     if (!hModule) {
         DWORD errorMessageID = ::GetLastError();
@@ -39,7 +38,7 @@ Environment IncludeLIB(std::string lib, Environment &env){
     Environment eenv = myFunction();
     std::cout << "ran it function\n";
 
-    for(auto& var : eenv.variables){
+    /*for(auto& var : eenv.variables){
         if(!enve.variables[var.first]){
             std::cout << "declaring it var " << var.first << "\n";
             enve.variables[var.first] = std::move(var.second);
@@ -49,7 +48,7 @@ Environment IncludeLIB(std::string lib, Environment &env){
         } else {
             std::cout << "skipping it var " << var.first << "\n";
         }
-    }
+    }*/
 
     return enve;
 }

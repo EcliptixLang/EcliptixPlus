@@ -8,6 +8,7 @@
 
 namespace Utilities {
     std::string readFile(std::string name);
+    void writeFile(std::string name, std::string value);
     CharArr split(std::string src);
 
     template<typename T>

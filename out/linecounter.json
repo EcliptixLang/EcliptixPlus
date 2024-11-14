@@ -1,0 +1,283 @@
+{
+    "extension": "linecounter",
+    "version": "0.2.7",
+    "workspace": "c:\\Users\\Sky\\Desktop\\Projects\\EcliptixPlus",
+    "linecount": [
+        {
+            "version": "0.2.7",
+            "counttime": "2024-11-11 19:39:34",
+            "filesum": 37,
+            "codesum": 2121,
+            "commentsum": 20,
+            "blanksum": 388,
+            "statistics": {
+                ".cpp": {
+                    "code": 1540,
+                    "comment": 19,
+                    "blank": 274
+                },
+                ".yml": {
+                    "code": 5,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".txt": {
+                    "code": 17,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".hpp": {
+                    "code": 534,
+                    "comment": 0,
+                    "blank": 109
+                },
+                ".a": {
+                    "code": 1,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".ecx": {
+                    "code": 23,
+                    "comment": 1,
+                    "blank": 5
+                },
+                "": {
+                    "code": 1,
+                    "comment": 0,
+                    "blank": 0
+                }
+            },
+            "filelist": [
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".gitignore"
+                },
+                {
+                    "blank": 1,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": "a.ecx"
+                },
+                {
+                    "filename": "build.ex",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "build.exe",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "build\\ecx",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 7,
+                    "code": 37,
+                    "comment": 0,
+                    "filename": "builder.cpp"
+                },
+                {
+                    "blank": 3,
+                    "code": 26,
+                    "comment": 2,
+                    "filename": "dll.cpp"
+                },
+                {
+                    "filename": "ecliptix-0.0.4.vsix",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 4,
+                    "code": 21,
+                    "comment": 1,
+                    "filename": "goal.ecx"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "hi.txt"
+                },
+                {
+                    "filename": "idk.exe",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 49,
+                    "code": 225,
+                    "comment": 0,
+                    "filename": "includes\\AST.hpp"
+                },
+                {
+                    "blank": 5,
+                    "code": 21,
+                    "comment": 0,
+                    "filename": "includes\\ENV.hpp"
+                },
+                {
+                    "blank": 9,
+                    "code": 25,
+                    "comment": 0,
+                    "filename": "includes\\FunctionValues.hpp"
+                },
+                {
+                    "blank": 1,
+                    "code": 8,
+                    "comment": 0,
+                    "filename": "includes\\Interpreter.hpp"
+                },
+                {
+                    "blank": 4,
+                    "code": 55,
+                    "comment": 0,
+                    "filename": "includes\\Lexer.hpp"
+                },
+                {
+                    "blank": 1,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "includes\\natives.hpp"
+                },
+                {
+                    "blank": 5,
+                    "code": 36,
+                    "comment": 0,
+                    "filename": "includes\\Parser.hpp"
+                },
+                {
+                    "blank": 4,
+                    "code": 20,
+                    "comment": 0,
+                    "filename": "includes\\Utilities.hpp"
+                },
+                {
+                    "blank": 30,
+                    "code": 136,
+                    "comment": 0,
+                    "filename": "includes\\Values.hpp"
+                },
+                {
+                    "blank": 1,
+                    "code": 7,
+                    "comment": 0,
+                    "filename": "includes\\winutils.hpp"
+                },
+                {
+                    "filename": "lib\\libecx.a",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "libecx.a"
+                },
+                {
+                    "blank": 0,
+                    "code": 5,
+                    "comment": 0,
+                    "filename": "proj.yml"
+                },
+                {
+                    "blank": 24,
+                    "code": 121,
+                    "comment": 0,
+                    "filename": "SimpleENV\\env.cpp"
+                },
+                {
+                    "filename": "SimpleENV\\environment.exe",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 1,
+                    "code": 26,
+                    "comment": 0,
+                    "filename": "src\\AST.cpp"
+                },
+                {
+                    "blank": 35,
+                    "code": 135,
+                    "comment": 0,
+                    "filename": "src\\ENV.cpp"
+                },
+                {
+                    "blank": 60,
+                    "code": 399,
+                    "comment": 17,
+                    "filename": "src\\Interpreter.cpp"
+                },
+                {
+                    "blank": 12,
+                    "code": 172,
+                    "comment": 0,
+                    "filename": "src\\Lexer.cpp"
+                },
+                {
+                    "blank": 10,
+                    "code": 39,
+                    "comment": 0,
+                    "filename": "src\\main.cpp"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "src\\natives.cpp"
+                },
+                {
+                    "blank": 98,
+                    "code": 456,
+                    "comment": 0,
+                    "filename": "src\\Parser.cpp"
+                },
+                {
+                    "blank": 5,
+                    "code": 28,
+                    "comment": 0,
+                    "filename": "src\\Utilities.cpp"
+                },
+                {
+                    "blank": 7,
+                    "code": 46,
+                    "comment": 0,
+                    "filename": "src\\Values.cpp"
+                },
+                {
+                    "blank": 12,
+                    "code": 55,
+                    "comment": 0,
+                    "filename": "src\\winutils.cpp"
+                },
+                {
+                    "blank": 0,
+                    "code": 16,
+                    "comment": 0,
+                    "filename": "temp_output.txt"
+                }
+            ]
+        }
+    ]
+}
