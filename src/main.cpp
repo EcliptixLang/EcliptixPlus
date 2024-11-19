@@ -10,7 +10,6 @@ int runFile(std::string filePath){
 	std::string code = Utilities::readFile(filePath);
 
 	std::unique_ptr<AST::ExprAST> ast = parser.produceAST(code);
-
 	Interpreter::evaluate(ast, ParentENV);
 	
 	return 1;

@@ -5,6 +5,8 @@ $"ls"
 console.out("hi")
 
 while(true){
+	$"clear"
+
 	console.out("Currently, you have money")
 	console.out("[1] Work")
 	console.out("[2] Shop")
@@ -13,7 +15,7 @@ while(true){
 	lock thing: string = console.ask("> ")
 
 	console.out(thing)
-	
+
 	if(thing == "1"){
 		lock random: number = 60
 		money = money + random
@@ -25,5 +27,6 @@ while(true){
 	} else if(thing == "3"){
 		process.quit(0)
 	}
+
+	break
 }
-// if this runs, then the interpreter is ready to get published
