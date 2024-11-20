@@ -8,73 +8,6 @@
 #include <FunctionValues.hpp>
 #include <array>
 
-std::unique_ptr<Values::Runtime> thing(std::vector<std::unique_ptr<Values::Runtime>> args, Environment& env){
-    std::string value = "";
-    
-    for(auto& arg : args){
-        value.append(" ").append(arg.get()->stringValue());
-    }
-
-    if(value[0] == ' '){
-        value.erase(0, 1);
-    }
-
-    std::cout << value << "\n";
-
-    return std::make_unique<Values::Null>(Values::Null());
-}
-
-std::unique_ptr<Values::Runtime> ask(std::vector<std::unique_ptr<Values::Runtime>> args, Environment& env){
-    std::string value = "";
-    
-    for(auto& arg : args){
-        value.append(" ").append(arg.get()->stringValue());
-    }
-
-    if(value[0] == ' '){
-        value.erase(0, 1);
-    }
-
-    std::cout << value;
-    std::string ans;
-    std::getline(std::cin, ans);
-    return std::make_unique<Values::String>(Values::String(ans));
-}
-
-std::unique_ptr<Values::Runtime> _throw(std::vector<std::unique_ptr<Values::Runtime>> args, Environment& env){
-    std::cout << "Error:\n- Code: 8\n- Description: ";
-    thing(std::move(args), env);
-    exit(8);
-
-    return std::make_unique<Values::Null>(Values::Null());
-}
-
-std::unique_ptr<Values::Runtime> readFile(std::vector<std::unique_ptr<Values::Runtime>> args, Environment& env){
-    if(args[0].get() == nullptr){
-        std::cout << "Cannot read null\n";
-        exit(6);
-    }
-
-    std::string filecont = Utilities::readFile(args[0].get()->stringValue());
-
-    return std::make_unique<Values::String>(Values::String(filecont));
-}
-
-std::unique_ptr<Values::Runtime> writeFile(std::vector<std::unique_ptr<Values::Runtime>> args, Environment& env){
-    if(args[0].get()->type() != "string"){
-        std::cout << "Cannot read a non string\n";
-        exit(6);
-    }
-    if(args[1].get()->type() != "string"){
-        std::cout << "Cannot read a non string\n";
-        exit(6);
-    }
-    
-    Utilities::writeFile(args[0].get()->stringValue(), args[1].get()->stringValue());
-
-    return std::make_unique<Values::Null>(Values::Null());
-}
-
 using Nodes = AST::Nodes; 
 using string = std::string;
 #define pointer std::unique_ptr
@@ -107,9 +40,7 @@ void runCommand(const string& command) {
 	system(command.c_str());
 }
 
-std::map<string, std::unique_ptr<Values::Runtime>> ErrorStuff;
-std::map<string, std::unique_ptr<Values::Runtime>> ConsoleStuff;
-std::map<string, std::unique_ptr<Values::Runtime>> FileStuff;
+
 Console console;
 bool init = false;
 
@@ -117,7 +48,6 @@ namespace Interpreter {
 	pointer<Values::Runtime> evaluate(pointer<AST::ExprAST>& astNode, Environment& env){
 
 		AST::Nodes type = astNode.get()->getType();
-		console.log(AST::stringifyAST(type));
 		switch (type){
 			case Nodes::Program:
 				return IProgram(astNode, env);
@@ -127,7 +57,7 @@ namespace Interpreter {
 				return IString(astNode);
 			case Nodes::Identifier:
 				return IIdent(astNode, env);
-/*			case Nodes::Number:
+			case Nodes::Number:
 				return INumber(astNode);
 			case Nodes::Variable:
 				return IVariable(astNode, env);
@@ -162,7 +92,7 @@ namespace Interpreter {
 				AST::ReturnExpr* number = dynamic_cast<AST::ReturnExpr*>(astNode.get());
 				return makeptr<Values::ReturnedValue>(Values::ReturnedValue(std::move(Interpreter::evaluate(number->value, env))));
 			} break;
-*/			default:
+			default:
 				std::cerr 
 					<< "This AST Node is not yet set up for interpretation.\n" 
 					<< "- Type: " << AST::stringifyAST(type) << "\n";
@@ -176,16 +106,10 @@ pointer<Values::Runtime> INumber(pointer<AST::ExprAST>& astNode){
 	return makeptr<Values::Number>(Values::Number(number->Value));
 }
 pointer<Values::Runtime> IIdent(pointer<AST::ExprAST>& astNode, Environment& env){
-	AST::Identifier* str = dynamic_cast<AST::Identifier*>(astNode.get());
-
-	Variable val = env.getVariable(str->name);
-
-	if(val.value != nullptr)
-		return std::move(val.value.get()->clone());
-	else{
-		console.log("Identifier is a null pointer");
-		exit(4);
-	}
+	std::unique_ptr<Values::Runtime> val = env.getVariable(dynamic_cast<AST::Identifier*>(astNode.get())->name).value;
+    env.setVariableSafe(dynamic_cast<AST::Identifier*>(astNode.get())->name, val.get()->clone());
+    
+	return val;
 }
 
 void replaceAll(string &str, const string &from, const string &to) {
@@ -328,19 +252,19 @@ pointer<Values::Runtime> ICall(pointer<AST::ExprAST>& astNode, Environment& env)
 	for(auto& arg : call->Args){
 		args.push_back(Interpreter::evaluate(arg, env));
 	}
-	Environment enva; enva.setParent(&env);
 
 	Nodes calleeType = call->Callee.get()->getType();
 	if(calleeType == Nodes::Member){
 			pointer<Values::Runtime> value;
-			pointer<Values::Runtime> val = IMember(call->Callee, enva);
+			pointer<Values::Runtime> val = IMember(call->Callee, env);
 //			console.log(val.get()->type());
 			if(val.get()->type() == "function"){
+				Environment enva; enva.setParent(&env);
 				Values::Function* sym = dynamic_cast<Values::Function*>(std::move(val.get()->clone().get()));
 				return ICallMem(sym, enva, args);
 			} else if(val.get()->type() == "native-fn"){
-				NativeFN* sym = dynamic_cast<NativeFN*>(std::move(val.get()->clone().get()));
-				return ICallMemNative(sym, enva, args);
+				NativeFN* sym = dynamic_cast<NativeFN*>(std::move(val.get()));
+				return ICallMemNative(sym, env, args);
 			}
 //			else if(val.get()->type() != "proto-fn")
 			else
@@ -354,7 +278,8 @@ pointer<Values::Runtime> ICall(pointer<AST::ExprAST>& astNode, Environment& env)
 		NativeFN* fn = dynamic_cast<NativeFN*>(std::move(fun.get()));
 		return fn->call(std::move(args), env);
 	} else if(fun.get()->type() == "function"){
-		return ICallFun(call, env, args);
+		Environment enva; enva.setParent(&env);
+		return ICallFun(call, enva, args);
 	}
 
 	throw std::runtime_error("Non function is trying to get called.");
@@ -390,27 +315,13 @@ pointer<Values::Runtime> IMember(pointer<AST::ExprAST>& astNode, Environment& en
 	}
 	AST::MemberExpr* mem = dynamic_cast<AST::MemberExpr*>(astNode.get());
 
-	ErrorStuff["throw"] = std::make_unique<NativeFN>(NativeFN(_throw));
-	ConsoleStuff["out"] = std::make_unique<NativeFN>(NativeFN(thing));
-    ConsoleStuff["ask"] = std::make_unique<NativeFN>(NativeFN(ask));
-	FileStuff["read"] = std::make_unique<NativeFN>(NativeFN(readFile));
-    FileStuff["write"] = std::make_unique<NativeFN>(NativeFN(writeFile));
-
-	env.setVariableSafe("error", std::make_unique<Values::Object>(Values::Object(std::move(ErrorStuff))), true);
-	env.setVariableSafe("console", std::make_unique<Values::Object>(Values::Object(std::move(ConsoleStuff))), true);
-	env.setVariableSafe("file", std::make_unique<Values::Object>(Values::Object(std::move(FileStuff))), true);
-	env.setVariableSafe("null", std::make_unique<Values::Null>(Values::Null()), true);
-	env.setVariableSafe("true", std::make_unique<Values::Boolean>(Values::Boolean(true)), true);
-	env.setVariableSafe("false", std::make_unique<Values::Boolean>(Values::Boolean(false)), true);
-
 	pointer<Values::Runtime> val = Interpreter::evaluate(mem->object, env);
 	if(val == nullptr){
 		std::cout << "value coming from IMember is a null pointer jsyk\n";
 	}
-	AST::Identifier* id = dynamic_cast<AST::Identifier*>(mem->property.get()->clone().get());
+	AST::Identifier* id = dynamic_cast<AST::Identifier*>(mem->property.get());
 	string sym = id->name;
 
-	console.log(val.get()->type());
 	if(val.get()->type() == "object"){
 		Values::Object* obj = dynamic_cast<Values::Object*>(std::move(val.get()));
 		pointer<Values::Runtime> value = std::move(obj->props[sym]);
@@ -532,27 +443,6 @@ pointer<Values::Runtime> IWhen(pointer<AST::ExprAST>& astNode, Environment& env)
 	return makeptr<Values::Null>(Values::Null());
 }
 
-pointer<Values::Runtime> IWhile(pointer<AST::ExprAST>& astNode, Environment& env){
-	bool truu = true;
-	pointer<Values::Runtime> val;
-	AST::WhileDeclaration* whilee = dynamic_cast<AST::WhileDeclaration*>(astNode.get());
-	Environment enva;
-	enva.setParent(&env);
-	for(int i = 0; i < 9999; i++){
-		pointer<Values::Runtime> cond = Interpreter::evaluate(whilee->conditional, enva);
-		if(truthy(cond)){
-			for(auto& thing : whilee->consequent){
-				val = Interpreter::evaluate(thing, enva);
-				if(val.get()->type() == "break"){
-					break;
-				}
-			}
-		} else {
-			truu = false;
-		}
-	}
-	return val;
-}
 
 pointer<Values::Runtime> IDSN(pointer<AST::ExprAST>& astNode, Environment& env){
 	return makeptr<Values::Null>(Values::Null());
@@ -590,4 +480,25 @@ bool truthy(pointer<Values::Runtime>& conditional){
 	} else {
 		return false;
 	}
+}
+
+pointer<Values::Runtime> IWhile(pointer<AST::ExprAST>& astNode, Environment& env){
+    bool truu = true;
+    pointer<Values::Runtime> val;
+    AST::WhileDeclaration* whilee = dynamic_cast<AST::WhileDeclaration*>(astNode.get());
+    Environment enva; enva.setParent(&env);
+    while(truu){
+        pointer<Values::Runtime> cond = Interpreter::evaluate(whilee->conditional, env);
+        if(truthy(cond)){
+            for(auto& thing : whilee->consequent){
+                val = Interpreter::evaluate(thing, enva);
+                if(val.get()->type() == "break"){
+                    break;
+                }
+            }
+        } else {
+            truu = false;
+        }
+    }
+    return val;
 }

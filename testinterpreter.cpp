@@ -23,12 +23,20 @@ std::unique_ptr<Values::Runtime> thing(std::vector<std::unique_ptr<Values::Runti
 namespace Interpreter {
 	pointer<Values::Runtime> evaluate(pointer<AST::ExprAST>& astNode, Environment& env){
         AST::Nodes type = astNode.get()->getType();
-        std::cout << AST::stringifyAST(type) << std::endl;
+//      std::cout << AST::stringifyAST(type) << std::endl;
 
         switch (type){
         case AST::Nodes::Number:
             return std::make_unique<Values::Number>(dynamic_cast<AST::NumberExpr*>(astNode.get())->Value);
         break;
+        case AST::Nodes::String:
+            return std::make_unique<Values::String>(dynamic_cast<AST::StringExpr*>(astNode.get())->Value);
+        break;
+        case AST::Nodes::Identifier: {
+            std::unique_ptr<Values::Runtime> val = env.getVariable(dynamic_cast<AST::Identifier*>(astNode.get())->name).value;
+            env.setVariableSafe(dynamic_cast<AST::Identifier*>(astNode.get())->name, val.get()->clone());
+            return val;
+        } break;
 
         case AST::Nodes::Program:{
             AST::Program* prog = dynamic_cast<AST::Program*>(astNode.get());
@@ -45,7 +53,9 @@ namespace Interpreter {
             pointer<Values::Runtime> lhs = evaluate(expr->LHS, env);
             pointer<Values::Runtime> rhs = evaluate(expr->RHS, env);
 
-            if(lhs.get()->type() == "number" && rhs.get()->type() == "number"){
+            if(lhs.get()->type() == "null" || rhs.get()->type() == "null"){
+                return std::make_unique<Values::Null>(Values::Null());
+            } else if(lhs.get()->type() == "number" && rhs.get()->type() == "number"){
                 Values::Number* lhsNumber = dynamic_cast<Values::Number*>(lhs.get());
                 Values::Number* rhsNumber = dynamic_cast<Values::Number*>(rhs.get());
                 int value;
@@ -63,8 +73,20 @@ namespace Interpreter {
                 }
 
                 return std::make_unique<Values::Number>(Values::Number(value));
+            } else if(lhs.get()->type() == "string" || rhs.get()->type() == "string"){
+                std::string lhsString = lhs.get()->stringValue();
+                std::string rhsString = rhs.get()->stringValue();
+                std::string value;
+
+                if(expr->Op == '+'){
+                    value = lhsString + rhsString;
+                } else {
+                    throw std::runtime_error("Unknown instruction found");
+                }
+
+                return std::make_unique<Values::String>(Values::String(value));
             } else {
-                throw std::runtime_error("Bad news, only numbers can be evaluated");
+                throw std::runtime_error("Bad news, only numbers & strings can be evaluated");
             }
         } break;
 

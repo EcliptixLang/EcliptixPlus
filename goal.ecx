@@ -14,8 +14,6 @@ while(true){
 
 	lock thing: string = console.ask("> ")
 
-	console.out(thing)
-
 	if(thing == "1"){
 		lock random: number = 60
 		money = money + random
