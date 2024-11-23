@@ -11,7 +11,7 @@ std::unique_ptr<Values::Runtime> hello(std::vector<std::unique_ptr<Values::Runti
 
 extern "C" __declspec(dllexport) Environment createLib(){
     Environment env;
-    env.variables["hello"] = std::make_unique<NativeFN>(NativeFN(hello));
+    env.setVariableSafe("hello", std::make_unique<NativeFN>(NativeFN(hello)), true);
     // std::cout << env.lookupVar("hello").get()->type() << "\n";
     return env;
 }

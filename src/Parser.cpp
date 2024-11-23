@@ -451,7 +451,7 @@ PAST Parser::parseMember() {
 			if(_operator.type == TokenType::Dot){
 				computed = false;
 				property = this->ParsePrimary();
-				if(property.get()->getType() != AST::Nodes::Identifier){
+				if(property->getType() != AST::Nodes::Identifier){
 					throw std::runtime_error("idk");
 				}
 			} else {
@@ -521,9 +521,9 @@ PAST Parser::ParsePrimary() {
 				PAST left = this->ParseExpression();
 				PAST right;
 				PAST value;
-				TokenType oper;
-				if(this->currentToken().type == TokenType::DoubleEquals || this->currentToken().type == TokenType::NotEquals){
-					oper = this->nextToken().type;
+				Lexer::Token oper;
+				if(this->currentToken().type == TokenType::ComparativeOperator){
+					oper = this->nextToken();
 					right = this->ParseExpression();
 					value = std::make_unique<AST::EquExpr>(AST::EquExpr(std::move(left), std::move(right), oper));
 				}else {

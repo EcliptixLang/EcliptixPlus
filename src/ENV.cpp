@@ -39,7 +39,7 @@ int Environment::parentCount(int num){
     return parent->parentCount(num);
 }
 
-void Environment::setVariable(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, bool constant){
+void Environment::setVariable(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, std::string type, bool constant){
     for (auto& var : variables) {
         if (var.name == varname) {
             if (var.constant) {
@@ -50,7 +50,7 @@ void Environment::setVariable(const std::string& varname, std::unique_ptr<Values
             return;
         }
     }
-    variables.push_back({ varname, std::move(vallo), constant });
+    variables.push_back({ varname, std::move(vallo), constant, type });
 }
 
 void Environment::setVariableSafe(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, bool constant){

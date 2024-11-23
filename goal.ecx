@@ -18,12 +18,12 @@ while(true){
 		lock random: number = 60
 		money = money + random
 		console.out("You worked hard and gained", random)
-		wait(3)
+		process.wait(3)
 	} else if(thing == "2"){
 		console.out("This has not been implemented yet")
-		wait(3)
+		process.wait(3)
 	} else if(thing == "3"){
-		process.quit(0)
+		process.exit(0)
 	}
 
 	break

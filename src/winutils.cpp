@@ -44,7 +44,7 @@ Environment IncludeLIB(std::string lib, Environment &env){
             enve.variables[var.first] = std::move(var.second);
             enve.constants.push_back(var.first);
 
-            std::cout << enve.variables[var.first].get()->type() << std::endl;
+            std::cout << enve.variables[var.first]->type() << std::endl;
         } else {
             std::cout << "skipping it var " << var.first << "\n";
         }

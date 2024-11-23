@@ -53,7 +53,7 @@ namespace Lexer {
                 Utilities::shift(src);
 				if(src[0] == '='){
 					Utilities::shift(src);
-					tokens.push_back(token("==", TokenType::DoubleEquals));
+					tokens.push_back(token("==", TokenType::ComparativeOperator));
 				} else
                 	tokens.push_back(token("=", TokenType::Equals));
             } else if (src[0] == '$') {
@@ -61,10 +61,31 @@ namespace Lexer {
                 tokens.push_back(token("$", TokenType::DollarSign));
             } else if (src[0] == ';') {
                 Utilities::shift(src);
-                tokens.push_back(token(";", TokenType::Semicolon));
+//                tokens.push_back(token(";", TokenType::Semicolon));
             } else if (src[0] == '@') {
                 Utilities::shift(src);
-                tokens.push_back(token("@", TokenType::Semicolon));
+                if(src[1] == '='){
+                    Utilities::shift(src);
+                    tokens.push_back(token("@=", TokenType::ComparativeOperator));
+                } else {
+                    tokens.push_back(token("@", TokenType::At));
+                }
+            } else if (src[0] == '<') {
+                Utilities::shift(src);
+                if(src[1] == '='){
+                    Utilities::shift(src);
+                    tokens.push_back(token("<=", TokenType::ComparativeOperator));
+                } else {
+                    tokens.push_back(token("<", TokenType::ComparativeOperator));
+                }
+            } else if (src[0] == '>') {
+                Utilities::shift(src);
+                if(src[1] == '='){
+                    Utilities::shift(src);
+                    tokens.push_back(token(">=", TokenType::ComparativeOperator));
+                } else {
+                    tokens.push_back(token(">", TokenType::ComparativeOperator));
+                }
             } else if (src[0] == ':') {
                 Utilities::shift(src);
                 tokens.push_back(token(":", TokenType::Colon));
@@ -162,15 +183,13 @@ namespace Lexer {
 			case TokenType::Comma:           return "TokenType::Comma";
 			case TokenType::DollarSign:      return "TokenType::DollarSign";
 			case TokenType::Dot:             return "TokenType::Dot";
-			case TokenType::DoubleEquals:    return "TokenType::DoubleEquals";
+			case TokenType::ComparativeOperator:    return "TokenType::ComparativeOperator";
 			case TokenType::Else:            return "TokenType::Else";
 			case TokenType::For:             return "TokenType::For";
 			case TokenType::From:            return "TokenType::From";
 			case TokenType::Fun:             return "TokenType::Fun";
 			case TokenType::Give:            return "TokenType::Give";
-			case TokenType::GreaterThanSign: return "TokenType::GreaterThanSign";
 			case TokenType::If:              return "TokenType::If";
-			case TokenType::NotEquals:       return "TokenType::NotEquals";
 			case TokenType::OpenBrace:       return "TokenType::OpenBrace";
 			case TokenType::OpenBracket:     return "TokenType::OpenBracket";
 			case TokenType::Return:          return "TokenType::Return";
