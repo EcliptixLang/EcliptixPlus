@@ -13,6 +13,11 @@ struct Variable {
     std::string type;
 };
 
+struct thingy {
+    std::unique_ptr<AST::ExprAST> cond;
+    std::vector<std::unique_ptr<AST::ExprAST>> consequent;
+};
+
 class Environment {
     public:
         void setup();
@@ -23,6 +28,7 @@ class Environment {
         int parentCount(int num = 0);
         void setVariableSafe(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, bool constant = false);
         void setVariable(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, std::string type, bool constant = false);
+        std::map<std::string, thingy> events;
     private:
     Environment* parent = nullptr;
     std::vector<Variable> variables;

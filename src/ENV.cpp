@@ -46,7 +46,7 @@ void Environment::setVariable(const std::string& varname, std::unique_ptr<Values
                 std::cout << "Cannot modify a constant variable.\n";
                 return;
             }
-            var.value = std::move(vallo);
+            var.value = std::move(vallo->clone());
             return;
         }
     }
@@ -59,11 +59,15 @@ void Environment::setVariableSafe(const std::string& varname, std::unique_ptr<Va
             if (var.constant) {
                 return;
             }
-            var.value = std::move(vallo);
+            var.value = std::move(vallo->clone());
             return;
         }
     }
-    variables.push_back({ varname, std::move(vallo), constant });
+    
+    if(!parent)
+        return variables.push_back({ varname, std::move(vallo), constant });
+    
+    return parent->setVariableSafe(varname, std::move(vallo), constant);
 }
 
 /*

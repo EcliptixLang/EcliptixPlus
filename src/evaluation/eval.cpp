@@ -3,12 +3,42 @@
 using Nodes = AST::Nodes; 
 using string = std::string;
 
+bool traoti(std::unique_ptr<Values::Runtime>& conditional){
+	if(conditional->type() == "boolean"){
+		Values::Boolean* cond = dynamic_cast<Values::Boolean*>(conditional.get());
+		const bool boolean = cond->value;
+		if(boolean) return true; 
+		else return false;
+	}
+
+	if(conditional){
+		return true;
+	} else {
+		return false;
+	}
+}
+
 void runCommand(const string& command) {
 	system(command.c_str());
 }
 
 std::unique_ptr<Values::Runtime> Interpreter::evaluate(std::unique_ptr<AST::ExprAST>& astNode, Environment& env){
 
+		for(auto& [key, val] : env.events){
+            std::unique_ptr<Values::Runtime> cond = this->evaluate(val.cond, env);
+            std::vector<std::unique_ptr<AST::ExprAST>> thingy = std::move(val.consequent);
+            if(traoti(cond)){
+                Environment enva; enva.setParent(&env); enva.setup();
+                for(auto& thing : thingy){
+                    std::unique_ptr<Values::Runtime> val = this->evaluate(thing, enva);
+                    if(val != nullptr){
+                        if (val->type() == "break"){
+                            break;
+                        }
+                    }
+    	        }
+        	}
+        }
 		AST::Nodes type = astNode->getType();
 		switch (type){
 			case Nodes::Program:
@@ -49,6 +79,8 @@ std::unique_ptr<Values::Runtime> Interpreter::evaluate(std::unique_ptr<AST::Expr
 			break;
 			case Nodes::While:
 				return IWhile(astNode, env);
+			case Nodes::When:
+				return IWhen(astNode, env);
 			case Nodes::Object:
 				return IObject(astNode, env);
 			break;

@@ -1,6 +1,11 @@
 set hi: string = file.read("hi.txt")
 process.wait(7)
 
+when(true){
+    console.out("YOOO")
+    process.exit(0)
+}
+
 while(true){
     if(hi == "Helooo"){
         console.out("Patatatoooo")
