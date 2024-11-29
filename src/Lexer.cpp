@@ -61,7 +61,7 @@ namespace Lexer {
                 tokens.push_back(token("$", TokenType::DollarSign));
             } else if (src[0] == ';') {
                 Utilities::shift(src);
-//                tokens.push_back(token(";", TokenType::Semicolon));
+                tokens.push_back(token(";", TokenType::Semicolon));
             } else if (src[0] == '@') {
                 Utilities::shift(src);
                 if(src[1] == '='){

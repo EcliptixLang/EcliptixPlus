@@ -13,7 +13,7 @@ namespace Values {
 			virtual std::string type() const = 0;
 			virtual ~Runtime() = default;
 			virtual std::string stringValue() const = 0;
-			virtual std::unique_ptr<Runtime> clone() const = 0;
+			virtual std::shared_ptr<Runtime> clone() const = 0;
 	};
 
 	class Null : public Runtime {
@@ -27,8 +27,8 @@ namespace Values {
 		        return "null";
       		}
 			
-			std::unique_ptr<Runtime> clone() const override {
-		        return std::make_unique<Null>(Null());
+			std::shared_ptr<Runtime> clone() const override {
+		        return std::make_shared<Null>(Null());
       		}
 	};
 
@@ -42,15 +42,15 @@ namespace Values {
 			std::string stringValue() const override {
 		        return "<break>";
       		}
-			std::unique_ptr<Runtime> clone() const override {
-		        return std::make_unique<Break>(Break());
+			std::shared_ptr<Runtime> clone() const override {
+		        return std::make_shared<Break>(Break());
       		}
 	};
 
 	class ReturnedValue : public Runtime {
 		public:
-			std::unique_ptr<Runtime> value;
-			ReturnedValue(std::unique_ptr<Runtime> value) : value(std::move(value)) {}
+			std::shared_ptr<Runtime> value;
+			ReturnedValue(std::shared_ptr<Runtime> value) : value(std::move(value)) {}
 			std::string type() const override {
 				return "return";
 			}
@@ -59,8 +59,8 @@ namespace Values {
 		        return "returnedValue";
       		}
 
-			std::unique_ptr<Runtime> clone() const override {
-		        return std::make_unique<ReturnedValue>(ReturnedValue(value.get()->clone()));
+			std::shared_ptr<Runtime> clone() const override {
+		        return std::make_shared<ReturnedValue>(ReturnedValue(value.get()->clone()));
       		}
 	};
 	
@@ -76,8 +76,8 @@ namespace Values {
 		        return std::to_string(value);
       		}
 
-			std::unique_ptr<Runtime> clone() const override {
-		        return std::make_unique<Boolean>(Boolean(value));
+			std::shared_ptr<Runtime> clone() const override {
+		        return std::make_shared<Boolean>(Boolean(value));
       		}
 	};
 
@@ -93,8 +93,8 @@ namespace Values {
 		        return std::to_string(value);
       		}
 
-			std::unique_ptr<Runtime> clone() const override {
-		        return std::make_unique<Number>(Number(value));
+			std::shared_ptr<Runtime> clone() const override {
+		        return std::make_shared<Number>(Number(value));
       		}
 	};
 
@@ -111,8 +111,8 @@ namespace Values {
 		        return value;
       		}
 
-			std::unique_ptr<Runtime> clone() const override {
-		        return std::make_unique<String>(String(value));
+			std::shared_ptr<Runtime> clone() const override {
+		        return std::make_shared<String>(String(value));
       		}
 	};
 
@@ -130,20 +130,20 @@ namespace Values {
 		        return output;
       		}
 
-			std::unique_ptr<Runtime> clone() const override {
-		        return std::make_unique<ShellCommand>(ShellCommand(command, output));
+			std::shared_ptr<Runtime> clone() const override {
+		        return std::make_shared<ShellCommand>(ShellCommand(command, output));
       		}
 	};
 
 	class Function : public Runtime {
 		public:
-			std::vector<std::unique_ptr<AST::ExprAST>> body;
+			std::vector<std::shared_ptr<AST::ExprAST>> body;
 			std::vector<std::string> parameters;
 			std::string name;
 			std::string Type;
 
 			Function(
-				std::vector<std::unique_ptr<AST::ExprAST>> body,
+				std::vector<std::shared_ptr<AST::ExprAST>> body,
 				std::vector<std::string> parameters,
 				std::string name,
 				std::string Type
@@ -157,25 +157,25 @@ namespace Values {
 		        return "null";
       		}
 
-			std::unique_ptr<Runtime> clone() const override {
-				std::vector<std::unique_ptr<AST::ExprAST>> newbody;
+			std::shared_ptr<Runtime> clone() const override {
+				std::vector<std::shared_ptr<AST::ExprAST>> newbody;
 				for(auto& expr : body){
 					newbody.push_back(expr.get()->clone());
 				}
 
-		        return std::make_unique<Function>(Function(std::move(newbody), parameters, name, Type));
+		        return std::make_shared<Function>(Function(std::move(newbody), parameters, name, Type));
       		}
 	};
 
-	std::string runtimeToJson(const std::unique_ptr<Runtime>& runtime);
-	std::string mapToJson(const std::map<std::string, std::unique_ptr<Runtime>>& map);
-    std::string arrayToJson(const std::vector<std::unique_ptr<Runtime>>& elements);
+	std::string runtimeToJson(const std::shared_ptr<Runtime> runtime);
+	std::string mapToJson(const std::map<std::string, std::shared_ptr<Runtime>> map);
+    std::string arrayToJson(const std::vector<std::shared_ptr<Runtime>> elements);
 
 	class Object : public Runtime {
 		public:
-			std::map<std::string, std::unique_ptr<Runtime>> props;
+			std::map<std::string, std::shared_ptr<Runtime>> props;
 
-			Object(std::map<std::string, std::unique_ptr<Runtime>> props) : props(std::move(props)) {}
+			Object(std::map<std::string, std::shared_ptr<Runtime>> props) : props(std::move(props)) {}
 			std::string type() const override {
 				return "object";
 			}
@@ -184,36 +184,36 @@ namespace Values {
 		        return mapToJson(props);
       		}
 			
-			std::unique_ptr<Runtime> clone() const override {
-				std::map<std::string, std::unique_ptr<Runtime>> newprops;
+			std::shared_ptr<Runtime> clone() const override {
+				std::map<std::string, std::shared_ptr<Runtime>> newprops;
 				for(auto& [name, val] : props){
 					newprops[name] = val.get()->clone();
 				}
 
-		        return std::make_unique<Object>(Object(std::move(newprops)));
+		        return std::make_shared<Object>(Object(std::move(newprops)));
       		}
 	};
 
 	class Array : public Runtime {
 		public:
-			std::vector<std::unique_ptr<Runtime>> elements;
+			std::vector<std::shared_ptr<Runtime>> elements;
 
-			Array(std::vector<std::unique_ptr<Runtime>> elements) : elements(std::move(elements)) {}
+			Array(std::vector<std::shared_ptr<Runtime>> elements) : elements(std::move(elements)) {}
 			std::string type() const override {
 				return "array";
 			}
 
 			std::string stringValue() const override {
-		        return arrayToJson(std::move(elements));
+		        return arrayToJson(elements);
       		}
 
-			std::unique_ptr<Runtime> clone() const override {
-				std::vector<std::unique_ptr<Runtime>> newelements;
+			std::shared_ptr<Runtime> clone() const override {
+				std::vector<std::shared_ptr<Runtime>> newelements;
 				for(auto& val : elements){
 					newelements.push_back(val.get()->clone());
 				}
 
-		        return std::make_unique<Array>(Array(std::move(newelements)));
+		        return std::make_shared<Array>(Array(std::move(newelements)));
       		}
 	};
 
@@ -228,8 +228,8 @@ namespace Values {
 		        return "<skip>";
       		}
 
-			std::unique_ptr<Runtime> clone() const override {
-		        return std::make_unique<Skip>(Skip());
+			std::shared_ptr<Runtime> clone() const override {
+		        return std::make_shared<Skip>(Skip());
       		}
 	};
 

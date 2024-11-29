@@ -3,7 +3,7 @@
 using Nodes = AST::Nodes; 
 using string = std::string;
 
-bool truthy(std::unique_ptr<Values::Runtime>& conditional){
+bool truthy(std::shared_ptr<Values::Runtime>& conditional){
 	if(conditional->type() == "boolean"){
 		Values::Boolean* cond = dynamic_cast<Values::Boolean*>(conditional.get());
 		const bool boolean = cond->value;
@@ -18,11 +18,11 @@ bool truthy(std::unique_ptr<Values::Runtime>& conditional){
 	}
 }
 
-std::unique_ptr<Values::Runtime> Interpreter::IIf(std::unique_ptr<AST::ExprAST>& astNode, Environment& env){
-	std::unique_ptr<Values::Runtime> val;
+std::shared_ptr<Values::Runtime> Interpreter::IIf(std::shared_ptr<AST::ExprAST>& astNode, Environment& env){
+	std::shared_ptr<Values::Runtime> val;
 	AST::IfStatement* whilee = dynamic_cast<AST::IfStatement*>(astNode.get());
 	Environment enva; enva.setParent(&env); enva.setup();
-	std::unique_ptr<Values::Runtime> cond = this->evaluate(whilee->conditional, enva);
+	std::shared_ptr<Values::Runtime> cond = this->evaluate(whilee->conditional, enva);
 	if(truthy(cond)){
 		for(auto& thing : whilee->consequent){
 			val = this->evaluate(thing, enva);
@@ -44,5 +44,5 @@ std::unique_ptr<Values::Runtime> Interpreter::IIf(std::unique_ptr<AST::ExprAST>&
 			}
 		}
 	}
-	return std::make_unique<Values::Null>(Values::Null());
+	return std::make_shared<Values::Null>(Values::Null());
 }

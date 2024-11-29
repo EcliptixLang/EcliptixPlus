@@ -65,3 +65,29 @@ std::vector<std::string> getDLLs(){
 
     return dlls;
 }
+
+int DisplayErrorMessageBox(const char* error) {
+    int msgboxID = MessageBoxA(
+        NULL,
+        error,
+        "Error",
+        MB_ICONEXCLAMATION | MB_OK
+    );
+
+    if (msgboxID == IDOK)
+    {
+        exit(1);
+    }
+
+    return msgboxID;    
+}
+
+wchar_t * convertCharArrayToLPCWSTR(const char* charArray){
+    wchar_t* wString=new wchar_t[4096];
+    MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
+    return wString;
+}
+
+void sleep(int idk){
+    Sleep(idk);
+}

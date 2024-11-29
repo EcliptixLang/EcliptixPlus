@@ -8,7 +8,7 @@
 
 using Token = Lexer::Token;
 using TokenType = Lexer::TokenType;
-#define PAST std::unique_ptr<AST::ExprAST>
+#define PAST std::shared_ptr<AST::ExprAST>
 
 bool Parser::NotEOF() {
   return this->Tokens[0].type != TokenType::_EOF;
@@ -38,7 +38,7 @@ Token Parser::expectToken(TokenType type){
 	return tok;
 }
 
-std::unique_ptr<AST::Program> Parser::produceAST(
+std::shared_ptr<AST::Program> Parser::produceAST(
 	std::string& sourceCode
 ){
 	Tokens = Lexer::tokenize(sourceCode);
@@ -48,9 +48,7 @@ std::unique_ptr<AST::Program> Parser::produceAST(
 		body.push_back(this->ParseStatement());
 	}
 
-	return std::make_unique<AST::Program>(
-		AST::Program(std::move(body))
-	);
+	return std::make_shared<AST::Program>(body);
 }
 
 PAST Parser::ParseStatement() {
@@ -87,13 +85,7 @@ PAST Parser::parseWhen() {
 
 		this->expectToken(TokenType::CloseBrace);
 
-		return std::make_unique<AST::WhenDeclaration>(
-			AST::WhenDeclaration(
-				std::move(conditional), 
-				_operator, 
-				std::move(consequent)
-			)
-		);
+		return std::make_shared<AST::WhenDeclaration>(conditional, _operator, consequent);
 	}
 
 PAST Parser::parseWhile() {
@@ -111,13 +103,7 @@ PAST Parser::parseWhile() {
 
 		this->expectToken(TokenType::CloseBrace);
 
-		return std::make_unique<AST::WhileDeclaration>(
-			AST::WhileDeclaration(
-				std::move(conditional), 
-				_operator, 
-				std::move(consequent)
-			)
-		);
+		return std::make_shared<AST::WhileDeclaration>(conditional, _operator, consequent);
 	}
 
 PAST Parser::parseIf() {
@@ -161,14 +147,7 @@ PAST Parser::parseIf() {
 			}
 		}
 
-		return std::make_unique<AST::IfStatement>(
-			AST::IfStatement(
-				std::move(conditional), 
-				_operator, 
-				std::move(consequent),
-				std::move(alternate)
-			)
-		);
+		return std::make_shared<AST::IfStatement>(conditional, _operator, consequent, alternate);
 	}
 
 PAST Parser::parseFunctions() {
@@ -214,14 +193,7 @@ PAST Parser::parseFunctions() {
 
 		this->expectToken(TokenType::CloseBrace);
 
-		return std::make_unique<AST::Function>(
-			AST::Function(
-				params, 
-				name, 
-				std::move(body),
-				type
-			)
-		);
+		return std::make_shared<AST::Function>(params, name, body, type);
 }
 
 PAST Parser::parseVariables() {
@@ -239,14 +211,7 @@ PAST Parser::parseVariables() {
 		this->expectToken(TokenType::Equals);
 
 		PAST value = this->ParseStatement();
-		return std::make_unique<AST::VariableExpr>(
-			AST::VariableExpr(
-				ident, 
-				type, 
-				std::move(value),
-				isConstant
-			)
-		);
+		return std::make_shared<AST::VariableExpr>(ident, type, value, isConstant);
 	}
 
 PAST Parser::parseAssignment() {
@@ -257,12 +222,7 @@ PAST Parser::parseAssignment() {
 			PAST value =
 				this->parseAssignment();
 
-			return std::make_unique<AST::AssignmentExpr>(
-				AST::AssignmentExpr(
-					std::move(left),
-					std::move(value)
-				)
-			);
+			return std::make_shared<AST::AssignmentExpr>(left, value);
 		}
 
 		return left;
@@ -288,7 +248,7 @@ PAST Parser::parseArrays() {
 				ttype == TokenType::Comma || 
 				ttype == TokenType::CloseBracket
 			){
-				arr.push_back(std::move(key));
+				arr.push_back(key);
 				continue;
 			}
 
@@ -302,11 +262,7 @@ PAST Parser::parseArrays() {
 
 		this->expectToken(TokenType::CloseBracket);
 
-		return std::make_unique<AST::Array>(
-			AST::Array(
-				std::move(arr)
-			)
-		);
+		return std::make_shared<AST::Array>(arr);
 	}
 
 PAST Parser::parseDSNotation() {
@@ -316,11 +272,7 @@ PAST Parser::parseDSNotation() {
 		this->nextToken();
 		Token idk = this->expectToken(TokenType::String);
 
-		return std::make_unique<AST::ShellCMD>(
-			AST::ShellCMD(
-				idk.value
-			)
-		);
+		return std::make_shared<AST::ShellCMD>(idk.value);
 	}
 
 PAST Parser::parseObjects() {
@@ -341,7 +293,7 @@ PAST Parser::parseObjects() {
 			if (this->currentToken().type == TokenType::Comma) {
 				this->nextToken(); 
 				map.push_back(
-					std::make_unique<AST::Element>(
+					std::make_shared<AST::Element>(
 						AST::Element(
 							key, nullptr
 						)
@@ -351,7 +303,7 @@ PAST Parser::parseObjects() {
 			} 
 			else if (this->currentToken().type == TokenType::CloseBrace) {
 				map.push_back(
-					std::make_unique<AST::Element>(
+					std::make_shared<AST::Element>(
 						AST::Element(
 							key, nullptr
 						)
@@ -365,12 +317,7 @@ PAST Parser::parseObjects() {
 			PAST value = 
 				this->ParseExpression();
       		map.push_back(
-				std::make_unique<AST::Element>(
-					AST::Element(
-						key, 
-						std::move(value)
-					)
-				)
+				std::make_shared<AST::Element>(key, value)
 			);
 			if(
 				this->currentToken().type != 
@@ -379,11 +326,7 @@ PAST Parser::parseObjects() {
 		}
 
 		this->expectToken(TokenType::CloseBrace);
-		return std::make_unique<AST::Object>(
-			AST::Object(
-				std::move(map)
-			)
-		);
+		return std::make_shared<AST::Object>(map);
 	}
 	
 PAST Parser::parseMemberCalls() {
@@ -393,7 +336,7 @@ PAST Parser::parseMemberCalls() {
 			this->currentToken().type == 
 			TokenType::OpenParen
 		){
-			return this->parseCalls(std::move(member));
+			return this->parseCalls(member);
 		}
 
 		return member;
@@ -410,10 +353,10 @@ PAST Parser::parseCalls(PAST caller) {
 	}
 
 	std::vector<PAST> args = this->parseArgs();
-	PAST call = std::make_unique<AST::CallExpr>(AST::CallExpr(std::move(caller), std::move(args)));
+	PAST call = std::make_shared<AST::CallExpr>(caller, args);
 		
 	if(this->currentToken().type == TokenType::OpenParen){
-		call = this->parseCalls(std::move(call));
+		call = this->parseCalls(call);
 	}
 
 	return call;
@@ -459,7 +402,7 @@ PAST Parser::parseMember() {
 				this->expectToken(TokenType::CloseBracket);
 			}
 
-			object = std::make_unique<AST::MemberExpr>(AST::MemberExpr(std::move(object), std::move(property), computed));
+			object = std::make_shared<AST::MemberExpr>(object, property, computed);
 		}
 
 		return object;
@@ -472,13 +415,13 @@ PAST Parser::ParseExpression() {
 
 PAST Parser::ParseAdditiveExpression(){
 		PAST left = this->ParseMultiplicativeExpression();
-		std::unique_ptr<AST::BinaryExpr> expr;
+		std::shared_ptr<AST::BinaryExpr> expr;
 		while(this->currentToken().value == "+" || this->currentToken().value == "-"){
 			std::string _operator = this->nextToken().value;
       PAST right = this->ParseMultiplicativeExpression();
 
-			expr = std::make_unique<AST::BinaryExpr>(AST::BinaryExpr(_operator.c_str()[0], std::move(left), std::move(right)));
-			left = std::move(expr);
+			expr = std::make_shared<AST::BinaryExpr>(_operator.c_str()[0], left, right);
+			left = expr;
 		}
 
 		return left;
@@ -486,13 +429,13 @@ PAST Parser::ParseAdditiveExpression(){
 
 PAST Parser::ParseMultiplicativeExpression(){
 		PAST left = this->parseMemberCalls();
-		std::unique_ptr<AST::BinaryExpr> expr;
+		std::shared_ptr<AST::BinaryExpr> expr;
 		while(this->currentToken().value == "/" || this->currentToken().value == "*"){
 			std::string _operator = this->nextToken().value;
 			PAST right = this->parseMemberCalls();
 			
-			expr = std::make_unique<AST::BinaryExpr>(AST::BinaryExpr(_operator.c_str()[0], std::move(left), std::move(right)));
-			left = std::move(expr);
+			expr = std::make_shared<AST::BinaryExpr>(_operator.c_str()[0], left, right);
+			left = expr;
 		}
 
 		return left;
@@ -503,17 +446,17 @@ PAST Parser::ParsePrimary() {
 
         switch (token.type) {
             case TokenType::Identifier:
-				return std::make_unique<AST::Identifier>(AST::Identifier(this->nextToken().value));
+				return std::make_shared<AST::Identifier>(AST::Identifier(this->nextToken().value));
             case TokenType::Number:
-                return std::make_unique<AST::NumberExpr>(AST::NumberExpr(std::stod(this->nextToken().value)));
+                return std::make_shared<AST::NumberExpr>(AST::NumberExpr(std::stod(this->nextToken().value)));
 			case TokenType::Break:
 				this->nextToken();
-                return std::make_unique<AST::Break>(AST::Break());
+                return std::make_shared<AST::Break>(AST::Break());
 			case TokenType::String:
-				return std::make_unique<AST::StringExpr>(AST::StringExpr(this->nextToken().value));
+				return std::make_shared<AST::StringExpr>(AST::StringExpr(this->nextToken().value));
 			case TokenType::Return:
 				this->nextToken();
-				return std::make_unique<AST::ReturnExpr>(AST::ReturnExpr(this->ParseExpression()));
+				return std::make_shared<AST::ReturnExpr>(this->ParseExpression());
 
 			case TokenType::OpenParen:{
 				this->nextToken();
@@ -524,9 +467,9 @@ PAST Parser::ParsePrimary() {
 				if(this->currentToken().type == TokenType::ComparativeOperator){
 					oper = this->nextToken();
 					right = this->ParseExpression();
-					value = std::make_unique<AST::EquExpr>(AST::EquExpr(std::move(left), std::move(right), oper));
+					value = std::make_shared<AST::EquExpr>(left, right, oper);
 				}else {
-					value = std::move(left);
+					value = left;
 				}
 				this->expectToken(TokenType::CloseParen);
 				return value;

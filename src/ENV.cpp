@@ -20,7 +20,7 @@ void Environment::setParent(Environment* Parent){
 Variable Environment::getVariable(const std::string& varname){
     for(auto& var: variables){
         if(var.name == varname)
-            return std::move(var);
+            return var;
     }
 
     if(!parent){
@@ -39,35 +39,35 @@ int Environment::parentCount(int num){
     return parent->parentCount(num);
 }
 
-void Environment::setVariable(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, std::string type, bool constant){
+void Environment::setVariable(const std::string& varname, std::shared_ptr<Values::Runtime> vallo, std::string type, bool constant){
     for (auto& var : variables) {
         if (var.name == varname) {
             if (var.constant) {
                 std::cout << "Cannot modify a constant variable.\n";
                 return;
             }
-            var.value = std::move(vallo->clone());
+            var.value = vallo;
             return;
         }
     }
-    variables.push_back({ varname, std::move(vallo), constant, type });
+    variables.push_back({ varname, vallo, constant, type });
 }
 
-void Environment::setVariableSafe(const std::string& varname, std::unique_ptr<Values::Runtime> vallo, bool constant){
+void Environment::setVariableSafe(const std::string& varname, std::shared_ptr<Values::Runtime> vallo, bool constant){
     for (auto& var : variables) {
         if (var.name == varname) {
             if (var.constant) {
                 return;
             }
-            var.value = std::move(vallo->clone());
+            var.value = vallo;
             return;
         }
     }
     
     if(!parent)
-        return variables.push_back({ varname, std::move(vallo), constant });
+        return variables.push_back({ varname, vallo, constant });
     
-    return parent->setVariableSafe(varname, std::move(vallo), constant);
+    return parent->setVariableSafe(varname, vallo, constant);
 }
 
 /*

@@ -5,9 +5,9 @@
 
 class NativeFN : public Values::Runtime {
 	public:
-		std::unique_ptr<Values::Runtime>(*call)(std::vector<std::unique_ptr<Values::Runtime>>, Environment&);
+		std::shared_ptr<Values::Runtime>(*call)(std::vector<std::shared_ptr<Values::Runtime>>, Environment&);
         
-		NativeFN(std::unique_ptr<Values::Runtime>(*call)(std::vector<std::unique_ptr<Values::Runtime>>, Environment&)) : call(std::move(call)) {}
+		NativeFN(std::shared_ptr<Values::Runtime>(*call)(std::vector<std::shared_ptr<Values::Runtime>>, Environment&)) : call(std::move(call)) {}
 
 		std::string type() const override {
 			return "native-fn";
@@ -17,16 +17,16 @@ class NativeFN : public Values::Runtime {
 			return "null";
 		}
 
-		std::unique_ptr<Values::Runtime> clone() const override {
-          return std::make_unique<NativeFN>(NativeFN(call));
+		std::shared_ptr<Values::Runtime> clone() const override {
+          return std::make_shared<NativeFN>(NativeFN(call));
         }
 };
 
 class ProtoFN : public Values::Runtime {
 	public:
-		std::unique_ptr<Values::Runtime>(*call)(std::vector<std::unique_ptr<Values::Runtime>>, Environment&, std::unique_ptr<Values::Runtime>&);
+		std::shared_ptr<Values::Runtime>(*call)(std::vector<std::shared_ptr<Values::Runtime>>, Environment&, std::shared_ptr<Values::Runtime>&);
         
-		ProtoFN(std::unique_ptr<Values::Runtime>(*call)(std::vector<std::unique_ptr<Values::Runtime>>, Environment&, std::unique_ptr<Values::Runtime>&)) : call(std::move(call)) {}
+		ProtoFN(std::shared_ptr<Values::Runtime>(*call)(std::vector<std::shared_ptr<Values::Runtime>>, Environment&, std::shared_ptr<Values::Runtime>&)) : call(std::move(call)) {}
 
 		std::string type() const override {
 			return "proto-fn";

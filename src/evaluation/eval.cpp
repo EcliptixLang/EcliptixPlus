@@ -3,7 +3,7 @@
 using Nodes = AST::Nodes; 
 using string = std::string;
 
-bool traoti(std::unique_ptr<Values::Runtime>& conditional){
+bool traoti(std::shared_ptr<Values::Runtime>& conditional){
 	if(conditional->type() == "boolean"){
 		Values::Boolean* cond = dynamic_cast<Values::Boolean*>(conditional.get());
 		const bool boolean = cond->value;
@@ -22,15 +22,15 @@ void runCommand(const string& command) {
 	system(command.c_str());
 }
 
-std::unique_ptr<Values::Runtime> Interpreter::evaluate(std::unique_ptr<AST::ExprAST>& astNode, Environment& env){
+std::shared_ptr<Values::Runtime> Interpreter::evaluate(std::shared_ptr<AST::ExprAST>& astNode, Environment& env){
 
 		for(auto& [key, val] : env.events){
-            std::unique_ptr<Values::Runtime> cond = this->evaluate(val.cond, env);
-            std::vector<std::unique_ptr<AST::ExprAST>> thingy = std::move(val.consequent);
+            std::shared_ptr<Values::Runtime> cond = this->evaluate(val.cond, env);
+            std::vector<std::shared_ptr<AST::ExprAST>> thingy = val.consequent;
             if(traoti(cond)){
                 Environment enva; enva.setParent(&env); enva.setup();
                 for(auto& thing : thingy){
-                    std::unique_ptr<Values::Runtime> val = this->evaluate(thing, enva);
+                    std::shared_ptr<Values::Runtime> val = this->evaluate(thing, enva);
                     if(val != nullptr){
                         if (val->type() == "break"){
                             break;
@@ -64,14 +64,14 @@ std::unique_ptr<Values::Runtime> Interpreter::evaluate(std::unique_ptr<AST::Expr
 			case Nodes::Equality:
 				return IEqu(astNode, env);
 			case Nodes::Skip:
-				return std::make_unique<Values::Skip>(Values::Skip());
+				return std::make_shared<Values::Skip>(Values::Skip());
 			case Nodes::ShellCmd:{
 				AST::ShellCMD* cmd = dynamic_cast<AST::ShellCMD*>(astNode.get());
 				runCommand(cmd->cmd);
-				return std::make_unique<Values::Null>(Values::Null());
+				return std::make_shared<Values::Null>(Values::Null());
 			} break;
 			case Nodes::Break:
-				return std::make_unique<Values::Break>(Values::Break());
+				return std::make_shared<Values::Break>(Values::Break());
 			case Nodes::Function:
 				return IFunction(astNode, env);
 			case Nodes::Assignment:
@@ -86,7 +86,7 @@ std::unique_ptr<Values::Runtime> Interpreter::evaluate(std::unique_ptr<AST::Expr
 			break;
 			case Nodes::Return: {
 				AST::ReturnExpr* number = dynamic_cast<AST::ReturnExpr*>(astNode.get());
-				return std::make_unique<Values::ReturnedValue>(Values::ReturnedValue(std::move(Interpreter::evaluate(number->value, env))));
+				return std::make_shared<Values::ReturnedValue>(Interpreter::evaluate(number->value, env));
 			} break;
 			default:
 				std::cerr 

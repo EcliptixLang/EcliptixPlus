@@ -3,14 +3,14 @@
 using Nodes = AST::Nodes; 
 using string = std::string;
 
-std::unique_ptr<Values::Runtime> Interpreter::IArray(std::unique_ptr<AST::ExprAST>& astNode, Environment& env){
+std::shared_ptr<Values::Runtime> Interpreter::IArray(std::shared_ptr<AST::ExprAST>& astNode, Environment& env){
 	AST::Array* arr = dynamic_cast<AST::Array*>(astNode.get());
-	std::vector<std::unique_ptr<Values::Runtime>> array{};
+	std::vector<std::shared_ptr<Values::Runtime>> array{};
 
 	for(auto& val : arr->elements){
-		std::unique_ptr<Values::Runtime> v = this->evaluate(val, env);
-		array.push_back(std::move(v));
+		std::shared_ptr<Values::Runtime> v = this->evaluate(val, env);
+		array.push_back(v);
 	}
 
-	return std::make_unique<Values::Array>(Values::Array(std::move(array)));
+	return std::make_shared<Values::Array>(array);
 }

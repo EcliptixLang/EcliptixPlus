@@ -1,7 +1,7 @@
 #include <Values.hpp>
 
 namespace Values { 
-    std::string runtimeToJson(const std::unique_ptr<Runtime>& runtime) {
+    std::string runtimeToJson(const std::shared_ptr<Runtime> runtime) {
         std::string type = runtime->type();
         if (type == "null") {
             return "null";
@@ -23,7 +23,7 @@ namespace Values {
         return "\"<unknown>\"";
     }
 
-    std::string arrayToJson(const std::vector<std::unique_ptr<Runtime>>& elements) {
+    std::string arrayToJson(const std::vector<std::shared_ptr<Runtime>> elements) {
         std::string json = "[";
         bool first = true;
 
@@ -37,7 +37,7 @@ namespace Values {
         return json;
     }
 
-    std::string mapToJson(const std::map<std::string, std::unique_ptr<Runtime>>& map) {
+    std::string mapToJson(const std::map<std::string, std::shared_ptr<Runtime>> map) {
         std::string json = "{";
         bool first = true;
 

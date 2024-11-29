@@ -11,12 +11,12 @@ void replaceAll(string &str, const string &from, const string &to) {
     }
 }
 
-std::unique_ptr<Values::Runtime> Interpreter::IString(std::unique_ptr<AST::ExprAST>& astNode){
+std::shared_ptr<Values::Runtime> Interpreter::IString(std::shared_ptr<AST::ExprAST>& astNode){
 	AST::StringExpr* str = dynamic_cast<AST::StringExpr*>(astNode.get());
 	string val = str->Value;
 	replaceAll(val, "\\n", "\n");
 	replaceAll(val, "\\t", "\t");
 	replaceAll(val, "\\b", "\b");
 
-	return std::make_unique<Values::String>(Values::String(val));
+	return std::make_shared<Values::String>(Values::String(val));
 }
