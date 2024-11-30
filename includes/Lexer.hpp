@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include "Utilities.hpp"
+#include <config.hpp>
 
 #define TokenArr std::vector<Lexer::Token>
 #define KeywordList std::map<std::string, Lexer::TokenType>
@@ -46,6 +47,7 @@ namespace Lexer {
 		At,
 		Using,
 		When,
+		Type,
 		_EOF,
     };
 
@@ -54,6 +56,6 @@ namespace Lexer {
         TokenType type;
     };
 
-    TokenArr tokenize(std::string sourceCode);
+    TokenArr tokenize(std::string sourceCode, Settings settings);
     std::string StringifyTokenTypes(TokenType type);
 }

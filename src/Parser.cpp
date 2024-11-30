@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 using Token = Lexer::Token;
 using TokenType = Lexer::TokenType;
@@ -38,10 +39,21 @@ Token Parser::expectToken(TokenType type){
 	return tok;
 }
 
+Token Parser::expectOne(TokenType type1, TokenType type2){
+  Token tok = this->Tokens[0];
+
+	if(Lexer::StringifyTokenTypes(tok.type) != Lexer::StringifyTokenTypes(type1) && Lexer::StringifyTokenTypes(tok.type) != Lexer::StringifyTokenTypes(type2)){
+		std::cout << "Unexpected token found during parsing\n- Value: " << this->currentToken().value << "\n- Type: " << Lexer::StringifyTokenTypes(this->currentToken().type) << "\n- Expected types: " << Lexer::StringifyTokenTypes(type1) << ", "<< Lexer::StringifyTokenTypes(type2);
+    	exit(1);
+	}
+
+	return tok;
+}
+
 std::shared_ptr<AST::Program> Parser::produceAST(
 	std::string& sourceCode
 ){
-	Tokens = Lexer::tokenize(sourceCode);
+	Tokens = Lexer::tokenize(sourceCode, settings);
 	std::vector<PAST> body{};
   
 	while(this->NotEOF()){
@@ -53,8 +65,18 @@ std::shared_ptr<AST::Program> Parser::produceAST(
 
 PAST Parser::ParseStatement() {
   switch(this->currentToken().type){
-		case TokenType::Set: case TokenType::Lock:
-			return this->parseVariables();
+		case TokenType::Type:
+			return this->ParseNewTypes();
+		case TokenType::Set: case TokenType::Lock:{
+			Token token = this->nextToken();
+			if(token.value == "lock")
+				constanty = true;
+			
+			if(settings.interpreter.use_new_syntax)
+				return ParseNewTypes();
+			else
+				return this->parseVariables();
+		}
 		case TokenType::Fun:
 			return this->parseFunctions();
 		case TokenType::If:
@@ -68,6 +90,63 @@ PAST Parser::ParseStatement() {
 		default:
 			return this->ParseExpression();
 	}
+}
+
+PAST Parser::ParseNewTypes(){
+	std::string type = this->expectToken(TokenType::Type).value;
+	std::transform(type.begin(), type.end(), type.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+
+	std::string name = this->expectToken(TokenType::Identifier).value;
+
+	std::string thing = this->expectOne(TokenType::OpenParen, TokenType::Equals).value;
+
+	if(thing == "("){
+		std::vector<PAST> args = 
+			this->parseArgs();
+
+		std::vector<std::string> params{};
+
+		for(auto& arg : args){
+			AST::ExprAST* expr = arg.get();
+			if(expr->getType() != AST::Nodes::Identifier){
+				throw "Parameters expected inside function declaration";
+			}
+
+	      	AST::Identifier* id = dynamic_cast<AST::Identifier*>(
+				arg.get()
+			);
+			
+			params.push_back(id->name);
+		}
+
+		this->expectToken(TokenType::OpenBrace);
+
+		std::vector<PAST> body{};
+
+		while(
+			this->NotEOF() &&
+			this->currentToken().type 
+				!= TokenType::CloseBrace
+		){
+			body.push_back(this->ParseStatement());
+		}
+
+		this->expectToken(TokenType::CloseBrace);
+
+		return std::make_shared<AST::Function>(params, name, body, type);
+	} else if(thing == "="){
+		this->nextToken();
+		PAST value = this->ParseStatement();
+		bool cty = false;
+		if(constanty)
+			cty = true;
+		constanty = false;
+		return std::make_shared<AST::VariableExpr>(name, type, value, cty);
+	}
+
+	exit(4);
 }
 
 PAST Parser::parseWhen() {
@@ -197,8 +276,8 @@ PAST Parser::parseFunctions() {
 }
 
 PAST Parser::parseVariables() {
-		Token token = this->nextToken();
-		bool isConstant = token.type == TokenType::Lock;
+		bool isConstant = constanty;
+		constanty = false;
 		std::string ident = 
 			this->expectToken(TokenType::Identifier).value;
 		std::string type = "";

@@ -1,1 +1,0 @@
-start ecx.exe a.ecx

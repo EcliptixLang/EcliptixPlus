@@ -23,8 +23,12 @@ std::shared_ptr<Values::Runtime> fipos(std::vector<std::shared_ptr<Values::Runti
 std::shared_ptr<Values::Runtime> shudclose(std::vector<std::shared_ptr<Values::Runtime>> args, Environment& env){
     return std::make_shared<Values::Boolean>(WindowShouldClose());
 }
-
+void CustomLog(int msgType, const char *text, va_list args)
+{ 
+  return;
+}
 std::shared_ptr<Values::Runtime> cretwindow(std::vector<std::shared_ptr<Values::Runtime>> args, Environment& env){
+    SetTraceLogCallback(CustomLog);
     InitWindow(800, 600, "Test");
     return std::make_shared<Values::Null>();
 }
@@ -90,12 +94,9 @@ std::shared_ptr<Values::Runtime> tringol(std::vector<std::shared_ptr<Values::Run
         exit(1);
     }
 
-    std::cout << "Hi.\n";
-
     Values::Number *a1 = dynamic_cast<Values::Number*>(a->props["x"].get());
     Values::Number *b1 = dynamic_cast<Values::Number*>(a->props["y"].get());
     Vector2 v1 = { (float)a1->value, (float)b1->value };
-    std::cout << "Hello ig.\n";
     Values::Number *a2 = dynamic_cast<Values::Number*>(b->props["x"].get());
     Values::Number *b2 = dynamic_cast<Values::Number*>(b->props["y"].get());
     Vector2 v2 = { (float)a2->value, (float)b2->value };

@@ -2,19 +2,24 @@
 #include "Lexer.hpp"
 #include "AST.hpp"
 #include "Utilities.hpp"
+#include "config.hpp"
 
 class Parser {
     public:
+        Parser(Settings settings) : settings(settings) {}
         std::shared_ptr<AST::Program> produceAST(std::string& sourceCode);
 
     private:
         TokenArr Tokens{};
         Lexer::Token lastToken;
+        bool constanty = false;
+        Settings settings;
 
 		bool NotEOF();
 		Lexer::Token currentToken();
         Lexer::Token previousToken();
         Lexer::Token nextToken();
+        Lexer::Token expectOne(Lexer::TokenType type1, Lexer::TokenType type2);
 
         std::shared_ptr<AST::ExprAST> ParseStatement();
         std::shared_ptr<AST::ExprAST> parseWhen();
@@ -32,6 +37,7 @@ class Parser {
         std::vector<std::shared_ptr<AST::ExprAST>> parseArgs();
 		std::vector<std::shared_ptr<AST::ExprAST>> parseArgsList();
         std::shared_ptr<AST::ExprAST> parseMember();
+        std::shared_ptr<AST::ExprAST> ParseNewTypes();
 
         std::shared_ptr<AST::ExprAST> ParseExpression();
         std::shared_ptr<AST::ExprAST> ParseAdditiveExpression();

@@ -4,14 +4,16 @@
 #include <iostream>
 #include <windows.h>
 
-std::unique_ptr<Values::Runtime> hello(std::vector<std::unique_ptr<Values::Runtime>> args, Environment& env){
-    Values::Number* num = dynamic_cast<Values::Number*>(std::move(args[0].get()));
-    std::cout << num->value << "\n";    
+std::shared_ptr<Values::Runtime> hello(std::vector<std::shared_ptr<Values::Runtime>> args, Environment& env){
+    Values::Number* num = dynamic_cast<Values::Number*>(args[0].get());
+    std::cout << num->value << "\n";
+    
+    return std::make_shared<Values::Number>(num->value);
 }
 
 extern "C" __declspec(dllexport) Environment createLib(){
     Environment env;
-    env.setVariableSafe("hello", std::make_unique<NativeFN>(NativeFN(hello)), true);
+    env.setVariableSafe("hello", std::make_unique<NativeFN>(hello), true);
     // std::cout << env.lookupVar("hello").get()->type() << "\n";
     return env;
 }

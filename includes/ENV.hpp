@@ -20,6 +20,7 @@ struct thingy {
 
 class Environment {
     public:
+        Settings settings;
         void setup();
         Environment* getParent();
         int variableCount();

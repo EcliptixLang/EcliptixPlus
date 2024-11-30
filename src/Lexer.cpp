@@ -1,25 +1,73 @@
 #include <Lexer.hpp>
 #include <iostream>
+#include <config.hpp>
+
+std::string trst(std::string str, Settings settings){
+    if(settings.types.automatic == str){
+        return "Auto";
+    }
+
+    if(settings.types.array == str){
+        return "Array";
+    }
+
+    if(settings.types.boolean == str){
+        return "Boolean";
+    }
+
+    if(settings.types.null == str){
+        return "Null";
+    }
+
+    if(settings.types.number == str){
+        return "Number";
+    }
+
+    if(settings.types.object == str){
+        return "Object";
+    }
+
+    if(settings.types.shell == str){
+        return "Shell";
+    }
+
+    if(settings.types.string == str){
+        return "String";
+    }
+
+    return str;
+}
 
 namespace Lexer {
 
-    KeywordList Keywords() {
+    KeywordList Keywords(Settings settings) {
         KeywordList keywords;
-        keywords["set"] = TokenType::Set;
-        keywords["lock"] = TokenType::Lock;
-		keywords["fun"] = TokenType::Fun;
-		keywords["if"] = TokenType::If;
-		keywords["else"] = TokenType::Else;
-		keywords["for"] = TokenType::For;
-		keywords["while"] = TokenType::While;
-		keywords["return"] = TokenType::Return;
-		keywords["break"] = TokenType::Break;
-		keywords["take"] = TokenType::Take;
-		keywords["from"] = TokenType::From;
-		keywords["give"] = TokenType::Give;
-		keywords["using"] = TokenType::Using;
-		keywords["when"] = TokenType::When;
-        keywords["skip"] = TokenType::Skip;
+        if (settings.interpreter.use_new_syntax) {
+            keywords[settings.types.automatic] = TokenType::Type;
+            keywords[settings.types.boolean] = TokenType::Type;
+            keywords[settings.types.array] = TokenType::Type;
+            keywords[settings.types.number] = TokenType::Type;
+            keywords[settings.types.object] = TokenType::Type;
+            keywords[settings.types.string] = TokenType::Type;
+            keywords[settings.types.null] = TokenType::Type;
+            keywords[settings.types.shell] = TokenType::Type;
+        }
+
+        keywords[settings.keywords.set] = TokenType::Set;
+        keywords[settings.keywords.lock] = TokenType::Lock;
+		keywords[settings.keywords.fun] = TokenType::Fun;
+		keywords[settings.keywords._if] = TokenType::If;
+		keywords[settings.keywords._else] = TokenType::Else;
+		keywords[settings.keywords._for] = TokenType::For;
+		keywords[settings.keywords._while] = TokenType::While;
+		keywords[settings.keywords._return] = TokenType::Return;
+		keywords[settings.keywords._break] = TokenType::Break;
+		keywords[settings.keywords.take] = TokenType::Take;
+		keywords[settings.keywords.from] = TokenType::From;
+		keywords[settings.keywords.give] = TokenType::Give;
+		keywords[settings.keywords._using] = TokenType::Using;
+		keywords[settings.keywords.when] = TokenType::When;
+        keywords[settings.keywords.skip] = TokenType::Skip;
         return keywords;
     }
 
@@ -31,8 +79,8 @@ namespace Lexer {
         return src == ' ' || src == '\n' || src == '\t' || src == '\b';
     }
 
-    TokenArr tokenize(std::string sourceCode) {
-        KeywordList keywords = Keywords();
+    TokenArr tokenize(std::string sourceCode, Settings settings) {
+        KeywordList keywords = Keywords(settings);
         TokenArr tokens{};
         CharArr src = Utilities::split(sourceCode);
 
@@ -142,7 +190,7 @@ namespace Lexer {
                     if (keywords.find(idk) == keywords.end()) {
                         tokens.push_back(token(idk, TokenType::Identifier));
                     } else {
-                        tokens.push_back(token(idk, keywords[idk]));
+                        tokens.push_back(token(trst(idk, settings), keywords[idk]));
                     }
                 } else if (isdigit(src[0])) {
                     std::string idk = "";

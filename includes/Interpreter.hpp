@@ -6,6 +6,7 @@
 
 class Interpreter {
     public:
+    Settings settings;
     std::shared_ptr<Values::Runtime> IProgram(std::shared_ptr<AST::ExprAST>& astNode, Environment& env);
     std::shared_ptr<Values::Runtime> INumber(std::shared_ptr<AST::ExprAST>& astNode);
     std::shared_ptr<Values::Runtime> ICall(std::shared_ptr<AST::ExprAST>& astNode, Environment& env);
