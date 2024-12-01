@@ -8,8 +8,8 @@
 
 #include <Parser.hpp>
 #include <Interpreter.hpp>
+#include <config.hpp>
 #include <winutils.hpp>
-/*
 #include <iostream>
 #include <vector>
 #include <string>
@@ -38,29 +38,25 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, std::vector<std::string>> flags;  // Stores flags and their values (multiple values allowed)
-    std::vector<std::string> positionalArgs;  // Stores positional arguments
+    std::unordered_map<std::string, std::vector<std::string>> flags;
+    std::vector<std::string> positionalArgs;
 
     void parseArguments(int argc, char* argv[]) {
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
-            if (arg[0] == '-') {  // It's a flag
+            if (arg[0] == '-') {
                 if (i + 1 < argc && argv[i + 1][0] != '-') {
-                    // Flag with value
                     flags[arg].push_back(argv[i + 1]);
-                    ++i;  // Skip next argument as it's the value of the flag
+                    ++i;
                 } else {
-                    // Flag without value
                     flags[arg].push_back("");
                 }
-            } else {  // Positional argument (not a flag)
+            } else {
                 positionalArgs.push_back(arg);
             }
         }
     }
 };
-*/
-#include <config.hpp>
 
 Environment ParentENV;
 Interpreter irpr;
@@ -93,10 +89,20 @@ int runREPL(Settings settings){
 }
 
 int main(int argc, char* argv[]) {
+    ArgumentParser argParser(argc, argv);
+    if(argParser.hasFlag("-h") || argParser.hasFlag("--help")){
+        std::cout << "Ecliptix Plus help menu\n";
+        std::cout << "Usage: ecx [arguments] (file1, file2...)\n";
+        std::cout << "\t-r, --repl: run a REPL\n";
+        std::cout << "\t-h, --help: show help commands\n";
+        exit(0);
+    }
     Settings settings = config();
     ParentENV.setup();
-	if(argc > 1)
-		return runFile(argv[1], settings);
-	else
-		return runREPL(settings);
+    if(argParser.hasFlag("-r") || argParser.hasFlag("--repl"))
+        return runREPL(settings);
+    std::vector<std::string> files = argParser.getPositionalArgs();
+	for(auto file : files){
+        runFile(file, settings);
+    }
 }
