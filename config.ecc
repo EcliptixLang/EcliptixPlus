@@ -1,0 +1,32 @@
+[project]
+name = "Project"
+version = "1.0"
+libs = []
+[interpreter]
+max_when = 10
+use_new_syntax = true
+[types]
+string = "String"
+number = "Numbah"
+object = "Object"
+array = "Array"
+boolean = "Boolean"
+auto = "Auto"
+null = "Null"
+shell = "Shell"
+[keywords]
+lock = "lock"
+fun = "fun"
+if = "if"
+else = "else"
+for = "for"
+while = "while"
+return = "return"
+set = "set"
+break = "break"
+take = "take"
+from = "from"
+give = "give"
+using = "using"
+when = "when"
+skip = "skip"

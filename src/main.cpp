@@ -15,6 +15,8 @@
 #include <string>
 #include <unordered_map>
 
+std::string file = "[project]\nname = \"Project\"\nversion = \"1.0\"\nlibs = []\n[interpreter]\nmax_when = 10\nuse_new_syntax = true\n[types]\nstring = \"String\"\nnumber = \"Numbah\"\nobject = \"Object\"\narray = \"Array\"\nboolean = \"Boolean\"\nauto = \"Auto\"\nnull = \"Null\"\nshell = \"Shell\"\n[keywords]\nlock = \"lock\"\nfun = \"fun\"\nif = \"if\"\nelse = \"else\"\nfor = \"for\"\nwhile = \"while\"\nreturn = \"return\"\nset = \"set\"\nbreak = \"break\"\ntake = \"take\"\nfrom = \"from\"\ngive = \"give\"\nusing = \"using\"\nwhen = \"when\"\nskip = \"skip\"";
+
 class ArgumentParser {
 public:
     ArgumentParser(int argc, char* argv[]) {
@@ -93,10 +95,18 @@ int main(int argc, char* argv[]) {
     if(argParser.hasFlag("-h") || argParser.hasFlag("--help")){
         std::cout << "Ecliptix Plus help menu\n";
         std::cout << "Usage: ecx [arguments] (file1, file2...)\n";
-        std::cout << "\t-r, --repl: run a REPL\n";
-        std::cout << "\t-h, --help: show help commands\n";
+        std::cout << "\t-r, --repl: Run a REPL\n";
+        std::cout << "\t-h, --help: Show help commands\n";
+        std::cout << "\t-i, --init: Initialize a new Ecliptix project\n";
         exit(0);
     }
+
+    if(argParser.hasFlag("-i") || argParser.hasFlag("--init")){
+        Utilities::writeFile("config.ecc", file);
+        std::cout << "Created config.ecc with default settings!\n";
+        exit(0);
+    }
+
     Settings settings = config();
     ParentENV.setup();
     if(argParser.hasFlag("-r") || argParser.hasFlag("--repl"))
