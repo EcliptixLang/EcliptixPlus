@@ -85,125 +85,161 @@ namespace Lexer {
         CharArr src = Utilities::split(sourceCode);
 
         while (src.size() > 0) {
-            if (src[0] == '(') {
-                tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::OpenParen));
-            } else if (src[0] == ')') {
-                tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::CloseParen));
-            } else if(src[0] == '{') {
-				tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::OpenBrace));
-			} else if (src[0] == '}') {
-                tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::CloseBrace));
-            } else if(src[0] == '[') {
-				tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::OpenBracket));
-			} else if (src[0] == ']') {
-                tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::CloseBracket));
-            } else if (src[0] == '=') {
-                Utilities::shift(src);
-				if(src[0] == '='){
-					Utilities::shift(src);
-					tokens.push_back(token("==", TokenType::ComparativeOperator));
-				} else
-                	tokens.push_back(token("=", TokenType::Equals));
-            } else if (src[0] == '$') {
-                Utilities::shift(src);
-                tokens.push_back(token("$", TokenType::DollarSign));
-            } else if (src[0] == ';') {
-                Utilities::shift(src);
-                tokens.push_back(token(";", TokenType::Semicolon));
-            } else if (src[0] == '@') {
-                Utilities::shift(src);
-                if(src[1] == '='){
-                    Utilities::shift(src);
-                    tokens.push_back(token("@=", TokenType::ComparativeOperator));
-                } else {
-                    tokens.push_back(token("@", TokenType::At));
-                }
-            } else if (src[0] == '<') {
-                Utilities::shift(src);
-                if(src[1] == '='){
-                    Utilities::shift(src);
-                    tokens.push_back(token("<=", TokenType::ComparativeOperator));
-                } else {
-                    tokens.push_back(token("<", TokenType::ComparativeOperator));
-                }
-            } else if (src[0] == '>') {
-                Utilities::shift(src);
-                if(src[1] == '='){
-                    Utilities::shift(src);
-                    tokens.push_back(token(">=", TokenType::ComparativeOperator));
-                } else {
-                    tokens.push_back(token(">", TokenType::ComparativeOperator));
-                }
-            } else if (src[0] == ':') {
-                Utilities::shift(src);
-                tokens.push_back(token(":", TokenType::Colon));
-            } else if (src[0] == ',') {
-                Utilities::shift(src);
-                tokens.push_back(token(",", TokenType::Comma));
-            } else if (src[0] == '.') {
-                Utilities::shift(src);
-                tokens.push_back(token(".", TokenType::Dot));
-            } else if (src[0] == '\'' || src[0] == '"') {
-                char odk = Utilities::shift(src);
-				std::string str = "";
-				while(src.size() > 0 && src[0] != odk){
-					str += Utilities::shift(src);
-				}
-                Utilities::shift(src);
+            switch (src[0]) {
+                case ')':
+                    tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::CloseParen));
+                break;
 
-                tokens.push_back(token(str, TokenType::String));
-            } else if (src[0] == '*' || src[0] == '+' || src[0] == '-' || src[0] == '/') {
-                if (src[1] == '/' || src[1] == '*') {
-                    char commentType = src[1];
-                    Utilities::shift(src);
-                    Utilities::shift(src);
+                case '(':
+                    tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::OpenParen));
+                break;
 
-                    if (commentType == '/'){
-                        while (!src.empty() && src[0] != '\n') {
-                            Utilities::shift(src);
-                        }
-                    }
+                case '{':
+                    tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::OpenBrace));
+                break;
 
-                    if (commentType == '*'){
+                case '}':
+                    tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::CloseBrace));
+                break;
+
+                case '[':
+                    tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::OpenBracket));
+                break;
+
+                case ']':
+                    tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::CloseBracket));
+                break;
+
+                case '=':
+                    Utilities::shift(src);
+    				if(src[0] != '=')
+                        tokens.push_back(token("=", TokenType::Equals));
+                    else
+			    		tokens.push_back(token("="+Utilities::shift(src), TokenType::ComparativeOperator));             	
+                break;
+
+                case '$':
+                    tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::DollarSign));
+                break;
+
+                case ';':
+                    tokens.push_back(token(std::to_string(Utilities::shift(src)), TokenType::Semicolon));    
+                break;
+
+                case '@':
+                    Utilities::shift(src);
+                    if(src[0] == '='){
                         Utilities::shift(src);
-                        while (!src.empty()) {
-                            if (src[0] == '*' && src.size() > 1 && src[1] == '/') {
-                                Utilities::shift(src);
-                                Utilities::shift(src);
-                                break;
-                            }
-                            Utilities::shift(src);
-                        }
-                    }
-                } else {
-                    std::string idk = "";
-                    idk += Utilities::shift(src);
-                    tokens.push_back(token(idk, TokenType::BinaryOperator));
-                }
-            } else {
-                if (isalpha(src[0])) {
-                    std::string idk = "";
-                    while (src.size() > 0 && isalnum(src[0])) {
-                        char text = Utilities::shift(src);
-						idk += text;
-                    }
-                    if (keywords.find(idk) == keywords.end()) {
-                        tokens.push_back(token(idk, TokenType::Identifier));
+                        tokens.push_back(token("@=", TokenType::ComparativeOperator));
                     } else {
-                        tokens.push_back(token(trst(idk, settings), keywords[idk]));
+                        tokens.push_back(token("@", TokenType::At));
                     }
-                } else if (isdigit(src[0])) {
-                    std::string idk = "";
-                    while (src.size() > 0 && isdigit(src[0])) {
-                        idk += Utilities::shift(src);
-                    }
-                    tokens.push_back(token(idk, TokenType::Number));
-                } else if (skippable(src[0])) {
+                break;
+                
+                case '<':
                     Utilities::shift(src);
-                } else {
-                    std::cout << "Unrecognized character found: " << src[0] << std::endl;
-                    exit(1);
-                }
+                    if(src[1] == '='){
+                        Utilities::shift(src);
+                        tokens.push_back(token("<=", TokenType::ComparativeOperator));
+                    } else {
+                        tokens.push_back(token("<", TokenType::ComparativeOperator));
+                    }
+                break;
+                
+                case '>':
+                    Utilities::shift(src);
+                    if(src[1] == '='){
+                        Utilities::shift(src);
+                        tokens.push_back(token(">=", TokenType::ComparativeOperator));
+                    } else {
+                        tokens.push_back(token(">", TokenType::ComparativeOperator));
+                    }
+                break;
+
+                case ':':
+                    Utilities::shift(src);
+                    tokens.push_back(token(":", TokenType::Colon));
+                break;
+
+                case ',':
+                    Utilities::shift(src);
+                    tokens.push_back(token(",", TokenType::Comma));
+                break;
+                
+                case '.':
+                    Utilities::shift(src);
+                    tokens.push_back(token(".", TokenType::Dot));
+                break;
+                
+                case '\'':
+                case '\"': {
+                    char odk = Utilities::shift(src);
+    				std::string str = "";
+				    while(src.size() > 0 && src[0] != odk){
+			    		str += Utilities::shift(src);
+		    		}
+                    Utilities::shift(src);
+                    tokens.push_back(token(str, TokenType::String));
+                } break;
+
+                case '*':
+                case '+':
+                case '-':
+                case '/':
+                    if (src[0] == '/' && src[1] == '/' || src[1] == '*') {
+                        char commentType = src[1];
+                        Utilities::shift(src);
+                        Utilities::shift(src);
+
+                        if (commentType == '/'){
+                            while (!src.empty() && src[0] != '\n') {
+                                Utilities::shift(src);
+                            }
+                        }
+
+                        if (commentType == '*'){
+                            Utilities::shift(src);
+                            while (!src.empty()) {
+                                if (src[0] == '*' && src.size() > 1 && src[1] == '/') {
+                                    Utilities::shift(src);
+                                    Utilities::shift(src);
+                                    break;
+                                }
+                                Utilities::shift(src);
+                            }
+                        }
+                    } else {
+                        std::string idk = "";
+                        idk += Utilities::shift(src);
+                        tokens.push_back(token(idk, TokenType::BinaryOperator));
+                    }
+                break;
+            
+                default:
+                    if (isalpha(src[0])) {
+                        std::string idk = "";
+                        while (src.size() > 0 && isalnum(src[0])) {
+                            char text = Utilities::shift(src);
+    						idk += text;
+                        }
+                        if (keywords.find(idk) == keywords.end()) {
+                            tokens.push_back(token(idk, TokenType::Identifier));
+                        } else {
+                            tokens.push_back(token(trst(idk, settings), keywords[idk]));
+                        }
+                    } else if (isdigit(src[0])) {
+                        std::string idk = "";
+                        while (src.size() > 0 && isdigit(src[0])) {
+                            idk += Utilities::shift(src);
+                        }
+                        tokens.push_back(token(idk, TokenType::Number));
+                    } else if (skippable(src[0])) {
+                        Utilities::shift(src);
+                    } else {
+                        std::cout << "Unrecognized character found: " << src[0] << std::endl;
+                        exit(1);
+                    }
+                break;
             }
         }
 

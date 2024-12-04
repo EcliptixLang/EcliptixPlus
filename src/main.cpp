@@ -8,14 +8,15 @@
 
 #include <Parser.hpp>
 #include <Interpreter.hpp>
-#include <config.hpp>
+//#include <config.hpp>
 #include <winutils.hpp>
 #include <iostream>
+//#include <curl/curl.h>
 #include <vector>
 #include <string>
 #include <unordered_map>
 
-std::string file = "[project]\nname = \"Project\"\nversion = \"1.0\"\nlibs = []\n[interpreter]\nmax_when = 10\nuse_new_syntax = true\n[types]\nstring = \"String\"\nnumber = \"Numbah\"\nobject = \"Object\"\narray = \"Array\"\nboolean = \"Boolean\"\nauto = \"Auto\"\nnull = \"Null\"\nshell = \"Shell\"\n[keywords]\nlock = \"lock\"\nfun = \"fun\"\nif = \"if\"\nelse = \"else\"\nfor = \"for\"\nwhile = \"while\"\nreturn = \"return\"\nset = \"set\"\nbreak = \"break\"\ntake = \"take\"\nfrom = \"from\"\ngive = \"give\"\nusing = \"using\"\nwhen = \"when\"\nskip = \"skip\"";
+std::string file = "[project]\nname = \"Project\"\nversion = \"1.0\"\nlibs = []\n[interpreter]\nmax_when = 10\nuse_new_syntax = false\n[types]\nstring = \"String\"\nnumber = \"Numbah\"\nobject = \"Object\"\narray = \"Array\"\nboolean = \"Boolean\"\nauto = \"Auto\"\nnull = \"Null\"\nshell = \"Shell\"\n[keywords]\nlock = \"lock\"\nfun = \"fun\"\nif = \"if\"\nelse = \"else\"\nfor = \"for\"\nwhile = \"while\"\nreturn = \"return\"\nset = \"set\"\nbreak = \"break\"\ntake = \"take\"\nfrom = \"from\"\ngive = \"give\"\nusing = \"using\"\nwhen = \"when\"\nskip = \"skip\"";
 
 class ArgumentParser {
 public:
@@ -107,7 +108,7 @@ int main(int argc, char* argv[]) {
         exit(0);
     }
 
-    Settings settings = config();
+    Settings settings;
     ParentENV.setup();
     if(argParser.hasFlag("-r") || argParser.hasFlag("--repl"))
         return runREPL(settings);

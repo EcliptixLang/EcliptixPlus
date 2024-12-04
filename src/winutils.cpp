@@ -4,6 +4,40 @@
 #include <iostream>
 #include <filesystem>
 #include <functional>
+/*#include <FunctionValues.hpp>
+#include <winutils.hpp>
+
+void ModuleLoader::loadModule(const std::string& modulePath, Environment& env) {
+        HMODULE hModule = LoadLibraryA(modulePath.c_str());
+        if (!hModule) {
+            std::cerr << "Error loading module: " << GetLastError() << std::endl;
+            return;
+        }
+
+        // Get the symbol (function pointer) from the shared object
+        typedef IModule* (*createModuleFunc)();
+        createModuleFunc createModule = (createModuleFunc)GetProcAddress(hModule, "createModule");
+
+        if (!createModule) {
+            std::cerr << "Error loading symbol: " << GetLastError() << std::endl;
+            FreeLibrary(hModule);
+            return;
+        }
+
+        // Create an instance of the module
+        IModule* module = createModule();
+        module->initialize();
+
+        Module m = module->load();
+        for(auto [k, v] : m.Functions){
+            env.setVariableSafe(k, std::make_shared<NativeFN>(v), true);
+        }
+
+        module->execute();
+
+        // Clean up
+        FreeLibrary(hModule);
+}*/
 
 std::string GetExecutablePath() {
     char path[MAX_PATH];

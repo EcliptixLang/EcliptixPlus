@@ -69,9 +69,3 @@ void Environment::setVariableSafe(const std::string& varname, std::shared_ptr<Va
     
     return parent->setVariableSafe(varname, vallo, constant);
 }
-
-/*
-void Environment::Initialize(){
-    
-    constants.push_back("false");
-}*/

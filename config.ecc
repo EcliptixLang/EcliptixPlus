@@ -2,9 +2,11 @@
 name = "Project"
 version = "1.0"
 libs = []
+
 [interpreter]
 max_when = 10
-use_new_syntax = true
+use_new_syntax = false
+
 [types]
 string = "String"
 number = "Numbah"
@@ -14,6 +16,7 @@ boolean = "Boolean"
 auto = "Auto"
 null = "Null"
 shell = "Shell"
+
 [keywords]
 lock = "lock"
 fun = "fun"

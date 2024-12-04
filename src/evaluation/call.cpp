@@ -19,7 +19,7 @@ std::shared_ptr<Values::Runtime> Interpreter::ICall(std::shared_ptr<AST::ExprAST
 //			console.log(val->type());
 			if(val->type() == "function"){
 				Environment enva; enva.setParent(&env);
-				Values::Function* fn = dynamic_cast<Values::Function*>(val->clone().get());
+				Values::Function* fn = dynamic_cast<Values::Function*>(val.get());
 				std::shared_ptr<Values::Runtime> value;
 
             	int i = 0;
@@ -72,7 +72,7 @@ std::shared_ptr<Values::Runtime> Interpreter::ICall(std::shared_ptr<AST::ExprAST
 		AST::Identifier* ident = dynamic_cast<AST::Identifier*>(call->Callee.get());
     	Variable fun = env.getVariable(ident->name);
 
-    	Values::Function* fn = dynamic_cast<Values::Function*>(fun.value->clone().get());
+    	Values::Function* fn = dynamic_cast<Values::Function*>(fun.value.get());
     	std::shared_ptr<Values::Runtime> value;
 
     	int i = 0;
@@ -85,7 +85,7 @@ std::shared_ptr<Values::Runtime> Interpreter::ICall(std::shared_ptr<AST::ExprAST
     	for(auto& expr : fn->body){
     		value = this->evaluate(expr, env);
     		if(value->type() == "return"){
-    			Values::ReturnedValue* sum = dynamic_cast<Values::ReturnedValue*>(value->clone().get());
+    			Values::ReturnedValue* sum = dynamic_cast<Values::ReturnedValue*>(value.get());
     			if(sum->value->type() == fn->Type || fn->Type == "auto")
     				return sum->value;
     			else {

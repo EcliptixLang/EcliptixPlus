@@ -23,11 +23,9 @@ std::shared_ptr<Values::Runtime> Interpreter::IWhile(std::shared_ptr<AST::ExprAS
     AST::WhileDeclaration* whilee = dynamic_cast<AST::WhileDeclaration*>(astNode.get());
     
     while(truu){
-        Environment enva; enva.setParent(&env); enva.setup();
+        Environment enva; enva.setParent(&env);
         std::shared_ptr<Values::Runtime> cond = this->evaluate(whilee->conditional, env);
-        std::shared_ptr<AST::ExprAST> clone = whilee->clone();
-        AST::WhileDeclaration* wil = dynamic_cast<AST::WhileDeclaration*>(clone.get());
-        std::vector<std::shared_ptr<AST::ExprAST>> thingy = wil->consequent;
+        std::vector<std::shared_ptr<AST::ExprAST>> thingy = whilee->consequent;
         if(troti(cond)){
             for(auto& thing : thingy){
                 std::shared_ptr<Values::Runtime> val = this->evaluate(thing, enva);

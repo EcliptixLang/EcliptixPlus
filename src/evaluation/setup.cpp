@@ -21,7 +21,7 @@ std::shared_ptr<Values::Runtime> fipos(std::vector<std::shared_ptr<Values::Runti
 }
 
 std::shared_ptr<Values::Runtime> shudclose(std::vector<std::shared_ptr<Values::Runtime>> args, Environment& env){
-    return std::make_shared<Values::Boolean>(WindowShouldClose());
+    return std::make_shared<Values::Boolean>(!WindowShouldClose());
 }
 void CustomLog(int msgType, const char *text, va_list args)
 { 
@@ -110,6 +110,97 @@ std::shared_ptr<Values::Runtime> tringol(std::vector<std::shared_ptr<Values::Run
     Values::Number *cc = dynamic_cast<Values::Number*>(d->props["b"].get());
     Color c1 = { (unsigned char)ac->value, (unsigned char)bc->value, (unsigned char)cc->value, 255 };
     DrawTriangle(v1, v2, v3, c1);
+
+    return std::make_shared<Values::Null>();
+}
+
+std::shared_ptr<Values::Runtime> sqare(std::vector<std::shared_ptr<Values::Runtime>> args, Environment& env){
+    if (args[0]->type() != "object" || args[1]->type() != "object"){
+        DisplayErrorMessageBox("drawRectangle(rec, col) Errored out: one of its values is not an object.");
+        exit(1);
+    }
+
+    std::cout << "init\n";
+    Values::Object *a = dynamic_cast<Values::Object*>(args[0].get());
+    Values::Object *b = dynamic_cast<Values::Object*>(args[1].get());
+    std::cout << "checks\n";
+
+    if(a->props["x"] == nullptr || a->props["y"] == nullptr || a->props["width"] == nullptr || a->props["height"] == nullptr){
+        DisplayErrorMessageBox("drawRectangle(rec, col) Errored out: Rectangle object is null (or is missing something*).\n rec: { x, y, width, height }");
+        exit(1);
+    }
+    if(b->props["r"] == nullptr || b->props["g"] == nullptr || b->props["b"] == nullptr){
+        DisplayErrorMessageBox("drawRectangle(rec, col) Errored out: Color of Rectangle is null (or badly formatted*).\n col: { r, g, b }");
+        exit(1);
+    }
+
+    if(a->props["x"]->type() != "number" || a->props["y"]->type() != "number" || a->props["height"]->type() != "number" || a->props["width"]->type() != "number"){
+        DisplayErrorMessageBox("drawRectangle(rec, col) Errored out: a point on rec is not a number.");
+        exit(1);
+    }
+    if(b->props["r"]->type() != "number" || b->props["g"]->type() != "number" || b->props["b"]->type() != "number"){
+        DisplayErrorMessageBox("drawRectangle(rec, col) Errored out: a point on col is is not a number.");
+        exit(1);
+    }
+
+    Values::Number *a1 = dynamic_cast<Values::Number*>(a->props["x"].get());
+    Values::Number *b1 = dynamic_cast<Values::Number*>(a->props["y"].get());
+    Values::Number *c1 = dynamic_cast<Values::Number*>(a->props["width"].get());
+    Values::Number *d1 = dynamic_cast<Values::Number*>(a->props["height"].get());
+    std::cout << "Rec\n";
+    Rectangle rec = { (float)a1->value, (float)b1->value, (float)c1->value, (float)d1->value };
+
+    Values::Number *ac = dynamic_cast<Values::Number*>(b->props["r"].get());
+    Values::Number *bc = dynamic_cast<Values::Number*>(b->props["g"].get());
+    Values::Number *cc = dynamic_cast<Values::Number*>(b->props["b"].get());
+    std::cout << "col\n";
+    Color co = { (unsigned char)ac->value, (unsigned char)bc->value, (unsigned char)cc->value, 255 };
+    
+    std::cout << "Draw\n";
+    DrawRectangleRec(rec, co);
+
+    return std::make_shared<Values::Null>();
+}
+
+std::shared_ptr<Values::Runtime> sqarerond(std::vector<std::shared_ptr<Values::Runtime>> args, Environment& env){
+    if (args[0]->type() != "object" || args[1]->type() != "object" || args[2]->type() != "number"){
+        DisplayErrorMessageBox("drawRectangleRound(rec, col, roundness) Errored out: one of its values is not an object.");
+        exit(1);
+    }
+
+    Values::Object *a = dynamic_cast<Values::Object*>(args[0].get());
+    Values::Object *b = dynamic_cast<Values::Object*>(args[1].get());
+    Values::Number *rou = dynamic_cast<Values::Number*>(args[2].get());
+
+    if(a->props["x"] == nullptr || a->props["y"] == nullptr || a->props["width"] == nullptr || a->props["height"] == nullptr){
+        DisplayErrorMessageBox("drawRectangleRound(rec, col, roundness) Errored out: Rectangle object is null (or is missing something*).\n rec: { x, y, width, height }");
+        exit(1);
+    }
+    if(b->props["r"] == nullptr || b->props["g"] == nullptr || b->props["b"] == nullptr){
+        DisplayErrorMessageBox("drawRectangleRound(rec, col, roundness) Errored out: Color of Rectangle is null (or badly formatted*).\n col: { r, g, b }");
+        exit(1);
+    }
+
+    if(a->props["x"]->type() != "number" || a->props["y"]->type() != "number" || a->props["height"]->type() != "number" || a->props["width"]->type() != "number"){
+        DisplayErrorMessageBox("drawRectangleRound(rec, col, roundness) Errored out: a point on rec is not a number.");
+        exit(1);
+    }
+    if(b->props["r"]->type() != "number" || b->props["g"]->type() != "number" || b->props["b"]->type() != "number"){
+        DisplayErrorMessageBox("drawRectangleRound(rec, col, roundness) Errored out: a point on col is is not a number.");
+        exit(1);
+    }
+
+    Values::Number *a1 = dynamic_cast<Values::Number*>(a->props["x"].get());
+    Values::Number *b1 = dynamic_cast<Values::Number*>(a->props["y"].get());
+    Values::Number *c1 = dynamic_cast<Values::Number*>(a->props["width"].get());
+    Values::Number *d1 = dynamic_cast<Values::Number*>(a->props["height"].get());
+    Rectangle rec = { (float)a1->value, (float)b1->value, (float)c1->value, (float)d1->value };
+
+    Values::Number *ac = dynamic_cast<Values::Number*>(b->props["r"].get());
+    Values::Number *bc = dynamic_cast<Values::Number*>(b->props["g"].get());
+    Values::Number *cc = dynamic_cast<Values::Number*>(b->props["b"].get());
+    Color co = { (unsigned char)ac->value, (unsigned char)bc->value, (unsigned char)cc->value, 255 };
+    DrawRectangleRounded(rec, rou->value, rou->value, co);
 
     return std::make_shared<Values::Null>();
 }
@@ -232,21 +323,23 @@ std::map<std::string, std::shared_ptr<Values::Runtime>> ProjectStuff;
 std::map<std::string, std::shared_ptr<Values::Runtime>> AppStuff;
 
 void Environment::setup(){
-    ErrorStuff["throw"] = std::make_shared<NativeFN>(NativeFN(_throw));
-    ErrorStuff["out"] = std::make_shared<NativeFN>(NativeFN(errout));
-	ConsoleStuff["out"] = std::make_shared<NativeFN>(NativeFN(thing));
-    ConsoleStuff["ask"] = std::make_shared<NativeFN>(NativeFN(ask));
-	FileStuff["read"] = std::make_shared<NativeFN>(NativeFN(readFile));
-    FileStuff["write"] = std::make_shared<NativeFN>(NativeFN(writeFile));
-    ProcessStuff["exit"] = std::make_shared<NativeFN>(NativeFN(exeet));
-    ProcessStuff["wait"] = std::make_shared<NativeFN>(NativeFN(holt));
-    AppStuff["showFPS"] = std::make_shared<NativeFN>(fipos);
-    AppStuff["drawTriangle"] = std::make_shared<NativeFN>(tringol);
-    AppStuff["createWindow"] = std::make_shared<NativeFN>(cretwindow);
-    AppStuff["deleteWindow"] = std::make_shared<NativeFN>(rmwindow);
-    AppStuff["shouldClose"] = std::make_shared<NativeFN>(shudclose);
-    AppStuff["startDrawing"] = std::make_shared<NativeFN>(startdrawing);
-    AppStuff["endDrawing"] = std::make_shared<NativeFN>(stopdrawing);
+    ErrorStuff["throw"]      =  std::make_shared<NativeFN>(NativeFN(_throw));
+    ErrorStuff["out"]        =  std::make_shared<NativeFN>(NativeFN(errout));
+	ConsoleStuff["out"]      =  std::make_shared<NativeFN>(NativeFN(thing));
+    ConsoleStuff["ask"]      =  std::make_shared<NativeFN>(NativeFN(ask));
+	FileStuff["read"]        =  std::make_shared<NativeFN>(NativeFN(readFile));
+    FileStuff["write"]       =  std::make_shared<NativeFN>(NativeFN(writeFile));
+    ProcessStuff["exit"]     =  std::make_shared<NativeFN>(NativeFN(exeet));
+    ProcessStuff["wait"]     =  std::make_shared<NativeFN>(NativeFN(holt));
+    AppStuff["showFPS"]      =  std::make_shared<NativeFN>(fipos);
+    AppStuff["drawTriangle"] =  std::make_shared<NativeFN>(tringol);
+    AppStuff["drawRect"] =  std::make_shared<NativeFN>(sqare);
+    AppStuff["drawRectRounded"] =  std::make_shared<NativeFN>(sqarerond);
+    AppStuff["createWindow"] =  std::make_shared<NativeFN>(cretwindow);
+    AppStuff["deleteWindow"] =  std::make_shared<NativeFN>(rmwindow);
+    AppStuff["running"]      =  std::make_shared<NativeFN>(shudclose);
+    AppStuff["startDrawing"] =  std::make_shared<NativeFN>(startdrawing);
+    AppStuff["endDrawing"]   =  std::make_shared<NativeFN>(stopdrawing);
 
 	this->setVariableSafe("error", std::make_shared<Values::Object>(Values::Object(ErrorStuff)), true);
 	this->setVariableSafe("console", std::make_shared<Values::Object>(Values::Object(ConsoleStuff)), true);

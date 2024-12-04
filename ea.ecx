@@ -5,11 +5,13 @@ lock point1: object = { x: 45, y: 200}
 lock point2: object = { x: 180, y: 60}
 lock point3: object = { x: 30, y: 40 }
 
-while(app.shouldClose() == false){
+while(app.running()){
     i = i - 1 
     app.startDrawing()
     app.showFPS(20, 20)
     app.drawTriangle(point1, point2, point3, { r: i, g: 0, b: 0})
+
+    app.drawRectRounded({ x: 170, y: 90, width: 69, height: 99 }, { r: i, g: 0, b: 0}, 70)
     app.endDrawing()
 }
 

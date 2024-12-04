@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
 	    "rm -rf lib/*.o" 
     };
     std::vector<std::string> dll{
-        "g++ dll.cpp -shared -o std.dll -L./lib -lecx -I./includes -DBUILDING_DLL"
+        "clang++ dll.cpp -shared -o std.dll -L./lib -lecx -I./includes -DBUILDING_DLL"
     };
     std::vector<std::string> exec{
         "g++ src/*.cpp src/evaluation/*.cpp -o idk.exe -L. -L./lib -I./includes -std=c++17 -ltomlcpp -lraylib -lgdi32 -lwinmm -fno-elide-constructors"

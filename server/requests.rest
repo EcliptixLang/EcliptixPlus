@@ -1,0 +1,40 @@
+GET http://localhost:4000/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoic2t5IiwiaWF0IjoxNzMzMDQ3MTA1LCJleHAiOjE3MzMwNDcxMjB9.Dymr4IfIksWfY6pZDHnziYC9GREaTQm8k7vp_X49xNw
+
+###
+
+POST http://localhost:3000/token
+Content-Type: application/json
+
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoic2t5IiwicGFzc3dvcmQiOiIkMmIkMTAkUXI4RHZnanhMTEtJOFMyVG1LOC44ZWZMMjZoN1lWQTZuanlUUGxLOUZURzguVC5XTXMwWC4iLCJpYXQiOjE3MzMwNDcyNjB9.0rSYEsi_OFSKg5TVtA21__PB5ubD0q5najunyVxPiTg"
+}
+
+###
+
+DELETE  http://localhost:3000/logout
+Content-Type: application/json
+
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoic2t5IiwicGFzc3dvcmQiOiIkMmIkMTAkUXI4RHZnanhMTEtJOFMyVG1LOC44ZWZMMjZoN1lWQTZuanlUUGxLOUZURzguVC5XTXMwWC4iLCJpYXQiOjE3MzMwNDcyNjB9.0rSYEsi_OFSKg5TVtA21__PB5ubD0q5najunyVxPiTg"
+}
+
+###
+
+POST http://localhost:3000/signup
+Content-Type: application/json
+
+{
+    "name": "sky",
+    "password": "dogfgo"
+}
+
+###
+
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+    "name": "sky",
+    "password": "dogfgo"
+}
